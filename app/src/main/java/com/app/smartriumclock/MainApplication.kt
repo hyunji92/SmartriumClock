@@ -25,5 +25,8 @@ class MainApplication : Application() {
         // example: SharedPreferences etc...
         val context: Context = MainApplication.applicationContext()
 
+        // Initialize Application
+        BleManager.instance.initialize(this)
+
     }
 }

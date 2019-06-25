@@ -1,38 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.app.smartriumclock">
-
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-
-    <application
-            android:name=".MainApplication"
-            android:icon="@mipmap/ic_launcher"
-            android:label=""
-            android:allowBackup="false"
-            android:roundIcon="@mipmap/ic_launcher_round"
-            android:supportsRtl="true"
-            android:theme="@style/Theme.AppCompat.NoActionBar">
-
-        <activity android:name=".intro.SplashActivity"
-                  android:launchMode="singleTask">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".DustMainActivity"
-                  android:launchMode="singleTask"/>
-        <activity android:name=".intro.TutorialActivity"
-                  android:launchMode="singleTask"/>
-        <activity android:name=".PlantInfoMainActivity"
-                  android:launchMode="singleTask"/>
-        <activity android:name=".search.SellectPlantActivity"/>
-        <activity android:name=".setting.SettingActivity"/>
-        <activity android:name=".search.SearchHardwareActivity"/>
-    </application>
+	package="com.app.smartriumclock">
+	
+	<uses-permission android:name="android.permission.BLUETOOTH" />
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+	
+	<application
+		android:name=".MainApplication"
+		android:allowBackup="false"
+		android:icon="@mipmap/ic_launcher"
+		android:label=""
+		android:launchMode="singleTask"
+		android:roundIcon="@mipmap/ic_launcher_round"
+		android:supportsRtl="true"
+		android:theme="@style/Theme.AppCompat.NoActionBar">
+		
+		<activity
+			android:name=".intro.SplashActivity"
+			android:launchMode="singleTask">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		
+		<activity
+			android:name=".DustMainActivity"
+			android:launchMode="singleTask" />
+		<activity
+			android:name=".intro.TutorialActivity"
+			android:launchMode="singleTask" />
+		<activity
+			android:name=".PlantInfoMainActivity"
+			android:launchMode="singleTask" />
+		<activity
+			android:name=".search.SellectPlantActivity"
+			android:launchMode="singleTask" />
+		<activity
+			android:name=".setting.SettingActivity"
+			android:launchMode="singleTask" />
+		<activity
+			android:name=".search.SearchHardwareActivity"
+			android:launchMode="singleTask" />
+		<activity
+			android:name=".setting.MyPageActivity"
+			android:launchMode="singleTask" />
+	</application>
 
 </manifest>

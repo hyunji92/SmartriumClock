@@ -9,17 +9,17 @@
 	
 	<item
 		android:id="@+id/navigation_dust"
-		android:icon="@drawable/dust_icon"
+		android:icon="@drawable/temperature_icon"
 		tools:ignore="MenuTitle" />
 	
 	<item
 		android:id="@+id/navigation_ultra_dust"
-		android:icon="@drawable/ultra_dust_icon"
+		android:icon="@drawable/huminity_icon"
 		tools:ignore="MenuTitle"/>
 	
 	<item
 		android:id="@+id/navigation_super_ultra_dust"
-		android:icon="@drawable/super_ultra_dust_icon"
+		android:icon="@drawable/illuminance_icon"
 		tools:ignore="MenuTitle"/>
 	
 	<item

@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity
 import com.app.smartriumclock.DustMainActivity
 import com.app.smartriumclock.R
 import com.app.smartriumclock.search.SearchHardwareActivity
+import com.app.smartriumclock.search.SellectPlantActivity
 
 class SplashActivity : AppCompatActivity() {
 
@@ -26,6 +27,7 @@ class SplashActivity : AppCompatActivity() {
             val handler = Handler()
             handler.postDelayed({
                 val intent = Intent(this, TutorialActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP and Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 startActivity(intent)
             }, 2000)
 
@@ -33,6 +35,7 @@ class SplashActivity : AppCompatActivity() {
             editor.commit()
         } else {
             val intent = Intent(this, SearchHardwareActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         }
     }

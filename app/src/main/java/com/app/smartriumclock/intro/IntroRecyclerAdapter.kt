@@ -43,6 +43,7 @@ class IntroRecyclerAdapter(var context: Context, var arrayList: ArrayList<String
             }
             mOutTutorialBtn.setOnClickListener {
                 val intent = Intent(context, DustMainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP  and Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 context.startActivity(intent)
             }
         }
