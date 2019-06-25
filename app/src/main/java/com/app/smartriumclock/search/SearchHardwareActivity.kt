@@ -40,7 +40,7 @@ class SearchHardwareActivity : AppCompatActivity() {
         // Click Listener
         yellow_next_btn.setOnClickListener {
             val intent = Intent(this, SellectPlantActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP and Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         }
 

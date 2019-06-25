@@ -27,7 +27,7 @@ class SellectPlantActivity : AppCompatActivity() {
 
         into_main.setOnClickListener {
             val intent = Intent(this, DustMainActivity::class.java)
-            intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP and FLAG_ACTIVITY_CLEAR_TOP)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         }
 

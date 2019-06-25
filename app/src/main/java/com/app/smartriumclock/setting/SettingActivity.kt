@@ -15,15 +15,17 @@ class SettingActivity : AppCompatActivity() {
 
         plant_info_layout.setOnClickListener {
             val intent = Intent(this, PlantInfoMainActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP and Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         }
 
         dust_info_layout.setOnClickListener {
             val intent = Intent(this, DustMainActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP and Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         }
     }
+
+
 
 }

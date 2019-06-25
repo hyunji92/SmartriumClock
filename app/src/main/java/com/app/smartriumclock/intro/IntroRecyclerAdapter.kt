@@ -29,23 +29,24 @@ class IntroRecyclerAdapter(var context: Context, var arrayList: ArrayList<String
             var mIntroImage = itemView.findViewById<ImageView>(R.id.item_image)
             var mOutTutorialBtn = itemView.findViewById<ImageView>(R.id.out_tutorial)
 
-            mIntroImage.setImageResource(R.drawable.next_btn_yellow)
-            /*when (position) {
+            when (position) {
                 0 -> mIntroImage.setImageResource(R.drawable.tutorial_0)
                 1 -> mIntroImage.setImageResource(R.drawable.tutorial_1)
                 2 -> {
                     mIntroImage.setImageResource(R.drawable.tutorial_2)
-                    mOutTutorialBtn.visibility = View.VISIBLE
+                    mIntroImage.setOnClickListener {
+                        val intent = Intent(context, DustMainActivity::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        context.startActivity(intent)
+                    }
                 }
-            }*/
-            if (position == 2) {
-                mOutTutorialBtn.visibility = View.VISIBLE
             }
-            mOutTutorialBtn.setOnClickListener {
+
+            /*mOutTutorialBtn.setOnClickListener {
                 val intent = Intent(context, DustMainActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP  and Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 context.startActivity(intent)
-            }
+            }*/
         }
     }
 }

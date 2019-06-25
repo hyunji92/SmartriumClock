@@ -11,7 +11,7 @@
 		android:name=".MainApplication"
 		android:allowBackup="false"
 		android:icon="@mipmap/ic_launcher"
-		android:label=""
+		android:label="SmartriumClock"
 		android:launchMode="singleTask"
 		android:roundIcon="@mipmap/ic_launcher_round"
 		android:supportsRtl="true"

@@ -8,17 +8,17 @@
 		tools:ignore="MenuTitle"/>
 	
 	<item
-		android:id="@+id/navigation_dust"
+		android:id="@+id/navigation_temperature"
 		android:icon="@drawable/temperature_icon"
 		tools:ignore="MenuTitle" />
 	
 	<item
-		android:id="@+id/navigation_ultra_dust"
+		android:id="@+id/navigation_huminity"
 		android:icon="@drawable/huminity_icon"
 		tools:ignore="MenuTitle"/>
 	
 	<item
-		android:id="@+id/navigation_super_ultra_dust"
+		android:id="@+id/navigation_illu"
 		android:icon="@drawable/illuminance_icon"
 		tools:ignore="MenuTitle"/>
 	

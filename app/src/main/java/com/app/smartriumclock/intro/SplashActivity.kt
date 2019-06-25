@@ -27,7 +27,7 @@ class SplashActivity : AppCompatActivity() {
             val handler = Handler()
             handler.postDelayed({
                 val intent = Intent(this, TutorialActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP and Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 startActivity(intent)
             }, 2000)
 
@@ -35,7 +35,7 @@ class SplashActivity : AppCompatActivity() {
             editor.commit()
         } else {
             val intent = Intent(this, SearchHardwareActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP and Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         }
     }

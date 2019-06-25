@@ -4,12 +4,14 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
+              android:layout_gravity="center|center_vertical"
               android:background="#00000000">
 
     <ImageView
             android:id="@+id/item_image"
             android:layout_width="match_parent"
-            android:layout_height="330dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|center_horizontal"
             tools:background="@drawable/tutorial_0"/>
 
     <ImageView
@@ -17,7 +19,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@drawable/next_btn_yellow"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="50dp"
             android:layout_gravity="bottom|center"
             android:visibility="gone"/>
 

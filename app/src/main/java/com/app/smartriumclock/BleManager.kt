@@ -1,5 +1,6 @@
 package com.app.smartriumclock
 
+import android.Manifest
 import android.app.Application
 import android.bluetooth.*
 import android.bluetooth.le.ScanCallback
@@ -9,6 +10,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.Build
 import android.os.Handler
+import android.support.v4.app.ActivityCompat.requestPermissions
 import android.util.Log
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
@@ -149,11 +151,11 @@ class BleManager {
     /*
      Request Fine Location permission
      */
-    private fun requestLocationPermission() {
+    /*private fun requestLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_FINE_LOCATION)
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_FINE_LOCATION)
         }
-    }
+    }*/
 
     /*
     Stop scanning
@@ -231,13 +233,20 @@ class BleManager {
             Log.d(TAG, "Result format : $formatDate")
 
 
-            //val result = writableCharacteristic?.setValue("W00"+ formatDate +"0000")
-            val result_dust = writableCharacteristic?.setValue("W02"+ formatDate +"0001")
-            Log.d(TAG, "Result dust:  " + "W02"+ formatDate +"0001")
+            var battery = "W00"+ formatDate +"0000"
+            var dust = "W01"+ formatDate +"0000"
+            var ultraDust = "W02"+ formatDate +"0000"
+            var superUltraDust = "W03"+ formatDate +"0000"
+            var temperature = "W04"+ formatDate +"0000"
+            var huminity = "W05"+ formatDate +"0000"
+            var illuminance = "W06"+ formatDate +"0000"
+
+            val result = writableCharacteristic?.setValue(battery)
+            Log.d(TAG, "Result battery:  " + "W00"+ formatDate +"0000")
 
             val writeResult = bleGatt!!.writeCharacteristic(writableCharacteristic)
 
-            Log.d(TAG, "Result : ${result_dust}, writeResult : ${writeResult}")
+            Log.d(TAG, "Result : ${result}, writeResult : ${writeResult}")
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic?, status: Int) {

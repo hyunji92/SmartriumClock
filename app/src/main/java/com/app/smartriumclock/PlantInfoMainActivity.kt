@@ -1,12 +1,10 @@
 package com.app.smartriumclock
 
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
-import android.support.v4.view.GravityCompat
 import android.support.v7.app.AppCompatActivity
 import com.app.smartriumclock.setting.MyPageActivity
 import com.app.smartriumclock.setting.SettingActivity
@@ -15,7 +13,6 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
 import kotlinx.android.synthetic.main.activity_dust_main.*
-import kotlinx.android.synthetic.main.activity_main.*
 
 class PlantInfoMainActivity : AppCompatActivity() {
 
@@ -23,20 +20,22 @@ class PlantInfoMainActivity : AppCompatActivity() {
 //    private lateinit var dataSet1: LineDataSet
 //    private lateinit var dataSet2: LineDataSet
 
+
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_all -> {
-                return@OnNavigationItemSelectedListener true
-            }
-            R.id.navigation_dust -> {
 
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.navigation_ultra_dust -> {
+            R.id.navigation_temperature -> {
 
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.navigation_super_ultra_dust -> {
+            R.id.navigation_huminity -> {
+
+                return@OnNavigationItemSelectedListener true
+            }
+            R.id.navigation_illu -> {
 
                 return@OnNavigationItemSelectedListener true
             }
