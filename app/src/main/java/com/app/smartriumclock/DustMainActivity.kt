@@ -14,10 +14,16 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
 import kotlinx.android.synthetic.main.activity_dust_main.*
 import java.nio.charset.Charset
+import java.text.SimpleDateFormat
+import java.util.*
 
 class DustMainActivity : AppCompatActivity() {
 
     var readValue: String? = null
+
+    val timer by lazy { Timer() }
+
+    lateinit var addTask :TimerTask
 
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
@@ -64,15 +70,17 @@ class DustMainActivity : AppCompatActivity() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         }
-
         // 데이터 리스너
         BleManager.instance.onCharacteristicChanged = { gatt, characteristic ->
             readValue = characteristic.value.toString(Charset.forName("UTF-8"))
             Log.d("BleManager", readValue)
         }
-        // 데이터 요청
-        BleManager.instance.write("W0015300000")
 
+        if (readValue == null || readValue!!.contains(":")) {
+            // 데이터 요청
+            BleManager.instance.write("W00" + nowTime() + "0000")
+        }
+        startPeriod()
 
         val left = chart1.axisLeft
         val right = chart1.axisRight
@@ -95,7 +103,7 @@ class DustMainActivity : AppCompatActivity() {
             axisLeft.isEnabled = false // no right axis
         }
 
-        if(readValue != null) {
+        if (readValue != null) {
             //데이터 정제
             //데이터 계산, 그래프 나타내내기 위해 필요
             LineChartDummyData()
@@ -105,15 +113,47 @@ class DustMainActivity : AppCompatActivity() {
 
     }
 
+    fun nowTime(): String? {
+
+        // 현재시간을 msec 으로 구한다.
+        var now = System.currentTimeMillis();
+        // 현재시간을 date 변수에 저장한다.
+        var date = Date(now);
+        // 시간을 나타냇 포맷을 정한다 ( yyyy/MM/dd 같은 형태로 변형 가능 )
+        var simpleDataFormat = SimpleDateFormat("HHmm");
+        // nowDate 변수에 값을 저장한다.
+        var formatDate = simpleDataFormat.format(date)
+        Log.d("TEST", "Result format : $formatDate")
+
+        return formatDate
+    }
+
+    fun startPeriod() {
+        timer.schedule(addTask, 0, 5 * (60 * 1000)) //// 0초후 첫실행, Interval분마다 계속실행
+
+        addTask = object : TimerTask() {
+            override fun run() {
+                //주기적으로 실행할 작업 추가
+                BleManager.instance.write("W00" + nowTime() + "0000")
+            }
+        }
+    }
+    fun stopPeriod() {
+        //Timer 작업 종료
+        if (timer != null) timer.cancel()
+    }
+
     fun LineChartDummyData() {
-        var dataSet = LineDataSet(listOf(
-            Entry(10f, 11f),
-            Entry(20f, 87f),
-            Entry(30f, 80f),
-            Entry(40f, 89f),
-            Entry(50f, 54f),
-            Entry(60f, 25f)
-        ), "미세")
+        var dataSet = LineDataSet(
+            listOf(
+                Entry(10f, 11f),
+                Entry(20f, 87f),
+                Entry(30f, 80f),
+                Entry(40f, 89f),
+                Entry(50f, 54f),
+                Entry(60f, 25f)
+            ), "미세"
+        )
 
 
         dataSet.apply {
@@ -126,14 +166,16 @@ class DustMainActivity : AppCompatActivity() {
             setDrawCircleHole(false)
         }
 
-        val dataSet1 = LineDataSet(listOf(
-            Entry(10f, 34f),
-            Entry(20f, 43f),
-            Entry(30f, 56f),
-            Entry(40f, 97f),
-            Entry(50f, 73f),
-            Entry(60f, 97f)
-        ), "초미세")
+        val dataSet1 = LineDataSet(
+            listOf(
+                Entry(10f, 34f),
+                Entry(20f, 43f),
+                Entry(30f, 56f),
+                Entry(40f, 97f),
+                Entry(50f, 73f),
+                Entry(60f, 97f)
+            ), "초미세"
+        )
 
         dataSet1.apply {
             color = ColorTemplate.rgb("#86A83E")
@@ -145,14 +187,16 @@ class DustMainActivity : AppCompatActivity() {
             setDrawCircleHole(false)
         }
 
-        val dataSet2 = LineDataSet(listOf(
-            Entry(10f, 68f),
-            Entry(20f, 149f),
-            Entry(30f, 98f),
-            Entry(40f, 63f),
-            Entry(50f, 72f),
-            Entry(60f, 80f)
-        ), "극초미세")
+        val dataSet2 = LineDataSet(
+            listOf(
+                Entry(10f, 68f),
+                Entry(20f, 149f),
+                Entry(30f, 98f),
+                Entry(40f, 63f),
+                Entry(50f, 72f),
+                Entry(60f, 80f)
+            ), "극초미세"
+        )
         dataSet2.apply {
             color = ColorTemplate.rgb("#122716")
             setDrawCircles(false)
@@ -168,5 +212,10 @@ class DustMainActivity : AppCompatActivity() {
             description.isEnabled = false // disable description text
             data = lineData
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopPeriod()
     }
 }
