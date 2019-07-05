@@ -1,10 +1,10 @@
 package com.app.smartriumclock.intro
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.DefaultItemAnimator
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.PagerSnapHelper
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.PagerSnapHelper
 import com.app.smartriumclock.R
 import kotlinx.android.synthetic.main.activity_tutorial.*
 
@@ -21,7 +21,11 @@ class TutorialActivity : AppCompatActivity() {
             }
         }
         val introAdapter = IntroRecyclerAdapter(this, arrayList)
-        val layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        val layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
 
         intro_recycler_view.apply {
             setLayoutManager(layoutManager)

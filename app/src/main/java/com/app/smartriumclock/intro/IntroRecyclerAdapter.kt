@@ -2,13 +2,14 @@ package com.app.smartriumclock.intro
 
 import android.content.Context
 import android.content.Intent
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.app.smartriumclock.DustMainActivity
 import com.app.smartriumclock.R
+import com.app.smartriumclock.search.SearchHardwareActivity
 
 class IntroRecyclerAdapter(var context: Context, var arrayList: ArrayList<String>) :
     RecyclerView.Adapter<IntroRecyclerAdapter.IntroImageViewHolder>() {
@@ -35,7 +36,7 @@ class IntroRecyclerAdapter(var context: Context, var arrayList: ArrayList<String
                 2 -> {
                     mIntroImage.setImageResource(R.drawable.tutorial_2)
                     mIntroImage.setOnClickListener {
-                        val intent = Intent(context, DustMainActivity::class.java)
+                        val intent = Intent(context, SearchHardwareActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         context.startActivity(intent)
                     }

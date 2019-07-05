@@ -4,15 +4,12 @@ import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import android.view.View
 import com.app.smartriumclock.BleManager
 import com.app.smartriumclock.R
 import kotlinx.android.synthetic.main.activity_search_hardware.*
-import java.text.SimpleDateFormat
-import java.util.*
 
 class SearchHardwareActivity : AppCompatActivity() {
 
@@ -42,6 +39,7 @@ class SearchHardwareActivity : AppCompatActivity() {
             val intent = Intent(this, SellectPlantActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
+            this.finish()
         }
 
         // 리사이클러뷰 설정

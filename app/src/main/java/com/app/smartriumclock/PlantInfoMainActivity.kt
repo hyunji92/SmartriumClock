@@ -4,8 +4,8 @@ import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import android.graphics.Color
 import android.os.Bundle
-import android.support.design.widget.BottomNavigationView
-import android.support.v7.app.AppCompatActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.appcompat.app.AppCompatActivity
 import com.app.smartriumclock.setting.MyPageActivity
 import com.app.smartriumclock.setting.SettingActivity
 import com.github.mikephil.charting.data.Entry

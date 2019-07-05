@@ -3,8 +3,8 @@ package com.app.smartriumclock.search
 import android.content.Intent
 import android.content.Intent.*
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.app.smartriumclock.DustMainActivity
 import com.app.smartriumclock.R
 import kotlinx.android.synthetic.main.activity_search_hardware.*
@@ -29,6 +29,8 @@ class SellectPlantActivity : AppCompatActivity() {
             val intent = Intent(this, DustMainActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
+
+            //this.finish()
         }
 
     }

@@ -1,6 +1,5 @@
 package com.app.smartriumclock
 
-import android.Manifest
 import android.app.Application
 import android.bluetooth.*
 import android.bluetooth.le.ScanCallback
@@ -8,9 +7,7 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
-import android.os.Build
 import android.os.Handler
-import android.support.v4.app.ActivityCompat.requestPermissions
 import android.util.Log
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
@@ -60,9 +57,49 @@ class BleManager {
     // 블루투스 데이터 가죠오는 콜백
     var onCharacteristicChanged: ((BluetoothGatt, BluetoothGattCharacteristic) -> Unit)? = null
 
+    // 데이터 콜백
+    var onReceiveData: ((Command, String, String) -> Unit)? = null
+
+    // BLE 앱 서비스
+    private val bleAppService
+        get() =
+            bleGatt?.getService(UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb"))
+
+    // BLE Writable Characteristic
+    private val bleWritableCharacteristic
+        get() = bleAppService?.getCharacteristic(UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb"))
+
+    // Write Value Queue
+    private val writeQueue = ArrayDeque<String>()
+
     companion object {
         val instance = BleManager()
     }
+
+    // Write Commands
+    enum class Command(val value: String) {
+        Battery("00"),
+        PM10("01"),
+        PM2_5("02"),
+        PM1("03"),
+        Temperature("04"),
+        Humidity("05"),
+        Illuminance("06")
+    }
+
+    // Command 생성에 사용되는 데이트 포맷
+    private val commandDateFormat by lazy { SimpleDateFormat("HHmm", Locale.getDefault()) }
+
+    // 최근 실행 요청한 Command 및 요청 시간
+    private var latestRequestCommand: String? = null
+    private var latestRequestAt: Date? = null
+    private var isRunningRequest = false
+
+    // Request Timeout 설정 후 해당 시간 내에 요청응답이 오지 않으면 무시
+    private val requestTimeout = 5 * 1000
+
+    // Read Value Regex
+    private val readRegex = """R(\d{2})(\d{4})(\d{4})""".toRegex()
 
     fun initialize(application: Application) {
         this.application = application
@@ -85,16 +122,16 @@ class BleManager {
 
         // 블루투스 스캔 필터
         val scanFilters = arrayListOf(
-                ScanFilter.Builder()
-                        .setDeviceName("CHIPSEN")
-                        .build()
+            ScanFilter.Builder()
+                .setDeviceName("CHIPSEN")
+                .build()
         )
 
         // scan settings
         // set low power scan mode ( BLE 만 스캔 )
         val settings = ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-                .build()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+            .build()
 
         // 스캔 시작
         bleScanner.startScan(scanFilters, settings, scanCallback)
@@ -106,28 +143,11 @@ class BleManager {
         scanHandler.postDelayed(this::stopScan, SCAN_PERIOD.toLong())
     }
 
-    /*
-   * Handle scan results after scan stopped
-   */
+    /**
+     * Handle scan results after scan stopped
+     */
     fun scanComplete() {
         stopScan()
-//        // check if nothing found
-//        if (scan_results_.isEmpty()) {
-//            //tv_status_.setText("scan results is empty")
-//            Log.d(TAG, "scan results is empty")
-//            return
-//        }
-//        // loop over the scan results and connect to them
-//        for (device_addr in scan_results_.keys) {
-//            Log.d(TAG, "Found device: " + device_addr)
-//            // get device instance using its MAC address
-//            val device = scan_results_.get(device_addr)
-//            if (MAC_ADDR.equals(device_addr)) {
-//                Log.d(TAG, "connecting device: " + device_addr)
-//                // connect to the device
-//                device?.let { connectDevice(it) }
-//            }
-//        }
     }
 
     /**
@@ -141,25 +161,16 @@ class BleManager {
         bleGatt = device.connectGatt(context, false, GattClientCallback())
     }
 
-    /*
-     Request BLE enable
+    /**
+     * Request BLE enable
      */
     private fun requestEnableBLE() {
         // startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT)
     }
 
-    /*
-     Request Fine Location permission
+    /**
+     * Stop scanning
      */
-    /*private fun requestLocationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_FINE_LOCATION)
-        }
-    }*/
-
-    /*
-    Stop scanning
-    */
     private fun stopScan() {
         // check pre-conditions
         if (isScanning && bleAdapter.isEnabled) {
@@ -170,8 +181,8 @@ class BleManager {
         Log.d(TAG, "scanning stopped")
     }
 
-    /*
-     Disconnect Gatt Server
+    /**
+     * Disconnect Gatt Server
      */
     fun disconnectGattServer() {
         Log.d(TAG, "Closing Gatt connection")
@@ -188,12 +199,65 @@ class BleManager {
         }
     }
 
-    fun write(value: String) {
-        val service = bleGatt?.getService(UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb"))
-        val writableCharacteristic = service?.getCharacteristic(UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb"))
-        val result = writableCharacteristic?.setValue(value)
-        val writeResult = bleGatt!!.writeCharacteristic(writableCharacteristic)
-        Log.d(TAG, "Result $result, WriteResult $writeResult")
+    /**
+     * BLE 쓰기 요청
+     */
+    fun writeQueue(command: Command, at: Date) {
+
+        // Create Command
+        val writeValue = "W${command.value}${commandDateFormat.format(at)}0000"
+
+        // Log
+        Log.d(TAG, "Add To Queue : Command - $writeValue")
+
+        // Write Queue에 추가
+        writeQueue.push(writeValue)
+
+        // Write Queue 체크
+        checkWriteQueue()
+    }
+
+    /**
+     * Write Queue 체크 해서 큐에 BLE에 Write 해야할 Value가 있다면
+     * 요청 하고 아닌 경우 넘어감
+     */
+    private fun checkWriteQueue() {
+
+        // Queue가 비어있음
+        if (writeQueue.isEmpty()) return
+
+        // 아직 요청이 실행중일때
+        if (isRunningRequest) return
+
+        // 입력해야할 Value
+        val writeValue = writeQueue.poll()
+
+        // 요청 상태 변경 및 최근 실행 정보 저장
+        isRunningRequest = true
+        latestRequestAt = Date()
+        latestRequestCommand = writeValue
+
+        // Writable Characteristic에 데이터 입력
+        val writeResult = bleWritableCharacteristic?.run {
+            setValue(writeValue)
+            bleGatt?.writeCharacteristic(this)
+        } ?: false
+
+        // Log
+        Log.d(TAG, "Write To Characteristic : ${writeValue} Result : $writeResult")
+
+        // Handler로 Timeout 초 후에 아직 데이터가 오지 않았다면 다음 데이터 요청
+        val tempRequestAt = latestRequestAt?.time
+        scanHandler.postDelayed({
+            if (isRunningRequest && tempRequestAt == latestRequestAt?.time) {
+                isRunningRequest = false
+                latestRequestAt = null
+                latestRequestCommand = null
+                checkWriteQueue()
+
+                Log.d(TAG, "Restart Check Write Queue")
+            }
+        }, requestTimeout.toLong())
     }
 
     /**
@@ -213,61 +277,64 @@ class BleManager {
             val setResultNotification = bleGatt!!.setCharacteristicNotification(readCharacteristic, true)
 
             val descriptor = readCharacteristic?.getDescriptor(
-                    UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
+                UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+            )
             descriptor?.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             bleGatt?.writeDescriptor(descriptor)
 
             Log.d(TAG, "setResultNotification : ${setResultNotification}")
-
-            // Write
-            val writableCharacteristic = service?.getCharacteristic(UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb"))
-
-            // 현재시간을 msec 으로 구한다.
-            var now = System.currentTimeMillis();
-            // 현재시간을 date 변수에 저장한다.
-            var date = Date(now);
-            // 시간을 나타냇 포맷을 정한다 ( yyyy/MM/dd 같은 형태로 변형 가능 )
-            var simpleDataFormat =  SimpleDateFormat("HHmm");
-            // nowDate 변수에 값을 저장한다.
-            var formatDate = simpleDataFormat.format(date)
-            Log.d(TAG, "Result format : $formatDate")
-
-
-            var battery = "W00"+ formatDate +"0000"
-            var dust = "W01"+ formatDate +"0000"
-            var ultraDust = "W02"+ formatDate +"0000"
-            var superUltraDust = "W03"+ formatDate +"0000"
-            var temperature = "W04"+ formatDate +"0000"
-            var huminity = "W05"+ formatDate +"0000"
-            var illuminance = "W06"+ formatDate +"0000"
-
-            val result = writableCharacteristic?.setValue(battery)
-            Log.d(TAG, "Result battery:  " + "W00"+ formatDate +"0000")
-
-            val writeResult = bleGatt!!.writeCharacteristic(writableCharacteristic)
-
-            Log.d(TAG, "Result : ${result}, writeResult : ${writeResult}")
         }
 
-        override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic?, status: Int) {
-            super.onCharacteristicWrite(gatt, characteristic, status)
-        }
-
-        override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-            super.onCharacteristicRead(gatt, characteristic, status)
-
-            Log.d(TAG, "onCharacteristicRead")
-        }
-
+        /**
+         * 데이터가 응답이 왔을때
+         */
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             super.onCharacteristicChanged(gatt, characteristic)
 
-            // 넘어온 데이터 콜백
+            // 콜백
             onCharacteristicChanged?.invoke(gatt, characteristic)
 
-            // 로깅
-            Log.d(TAG, "onCharacteristicChanged : ${characteristic?.value?.toString(Charset.forName("UTF-8"))}")
+            // 가져와진 데이터
+            val value = characteristic.value.toString(Charset.forName("UTF-8"))
 
+            // Data Receive
+            Log.d(TAG, "Receive Data : $latestRequestCommand -> $value")
+
+            // 넘어온 데이터 콜백에서 데이터 파싱
+            val matchResult = readRegex.find(value)
+
+            // 결과 데이터를 못가져 왔을때 Queue에 추가
+            if (matchResult != null) {
+                val commandCode = matchResult.groups[1]?.value ?: throw Exception("Command Code")
+                val date = matchResult.groups[2]?.value ?: throw Exception("Date")
+                val data = matchResult.groups[3]?.value ?: throw Exception("Data")
+
+                // 미래형
+                // val command: Command? = Command.values().firstOrNull { it.value == commandCode }
+
+                // 현재형
+                val command: Command? =
+                    Command.values().firstOrNull { latestRequestCommand?.contains("W${it.value}") ?: false }
+
+                // Command Callback
+                if (command != null) {
+                    onReceiveData?.invoke(command, date, data)
+                } else {
+                    Log.e(TAG, "Received Data But Unsupported Command Code")
+                }
+
+                Log.d(TAG, "Receive Data : $latestRequestCommand - ($commandCode),($date),($data)")
+            } else {
+                // 처리를 어떻게 해야할지???
+            }
+
+            // Request 업데이트
+            isRunningRequest = false
+            latestRequestAt = null
+            latestRequestCommand = null
+
+            // Check Queue
+            checkWriteQueue()
         }
 
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newStatus: Int) {
@@ -304,10 +371,10 @@ class BleManager {
      * BLE Scan Callback class
      */
     class BLEScanCallback constructor(
-            private val scanResults: HashMap<String, BluetoothDevice>,
-            private val onUpdate: () -> Unit
+        private val scanResults: HashMap<String, BluetoothDevice>,
+        private val onUpdate: () -> Unit
     ) :
-            ScanCallback() {
+        ScanCallback() {
 
         private val TAG = "BLEScanCallback"
 

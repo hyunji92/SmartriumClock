@@ -2,7 +2,7 @@ package com.app.smartriumclock.setting
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 
 import com.app.smartriumclock.R
 import com.app.smartriumclock.search.SearchHardwareActivity

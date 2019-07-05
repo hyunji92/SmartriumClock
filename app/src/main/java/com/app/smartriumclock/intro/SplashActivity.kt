@@ -4,11 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
-import android.support.v7.app.AppCompatActivity
-import com.app.smartriumclock.DustMainActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.app.smartriumclock.R
 import com.app.smartriumclock.search.SearchHardwareActivity
-import com.app.smartriumclock.search.SellectPlantActivity
 
 class SplashActivity : AppCompatActivity() {
 
@@ -29,6 +27,8 @@ class SplashActivity : AppCompatActivity() {
                 val intent = Intent(this, TutorialActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 startActivity(intent)
+
+                this.finish()
             }, 2000)
 
             editor.putBoolean("first_user", true)
@@ -37,6 +37,8 @@ class SplashActivity : AppCompatActivity() {
             val intent = Intent(this, SearchHardwareActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
+
+            this.finish()
         }
     }
 
