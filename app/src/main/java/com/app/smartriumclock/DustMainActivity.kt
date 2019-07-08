@@ -9,7 +9,6 @@ import com.app.smartriumclock.model.BleReceive
 import com.app.smartriumclock.setting.MyPageActivity
 import com.app.smartriumclock.setting.SettingActivity
 import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -30,23 +29,22 @@ class DustMainActivity : AppCompatActivity() {
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_all -> {
-                set()
+                setAll()
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.navigation_temperature -> {
-
+            R.id.navigation_dust -> {
+                setDustChart()
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.navigation_huminity -> {
-
+            R.id.navigation_ultra_dust -> {
+                setUltraDustChart()
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.navigation_illu -> {
-
+            R.id.navigation_super_ultra_dust -> {
+                setSuperUltraDustChart()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_setting -> {
-
                 val intent = Intent(this, SettingActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 startActivity(intent)
@@ -124,18 +122,43 @@ class DustMainActivity : AppCompatActivity() {
             axisLeft.isEnabled = false // no right axis
         }
 
-        if (readValue != null) {
-            //데이터 정제
-            //데이터 계산, 그래프 나타내내기 위해 필요
-            LineChartDummyData()
-        } else {
-            LineChartDummyData()
-        }
 
     }
 
+
     // Test Code
-    fun set() {
+    fun setDustChart() {
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllPM10()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    chart1.data.clearValues()
+                    chart1.data.addDataSet(LineDataSet(
+                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
+                        "미세"
+                    ).apply {
+                        color = ColorTemplate.rgb("#B0C17E")
+                        setDrawCircles(false)
+                        setDrawValues(false)
+                        fillAlpha = 65
+                        fillColor = ColorTemplate.getHoloBlue()
+                        highLightColor = Color.rgb(176, 193, 126)
+                        setDrawCircleHole(false)
+                    })
+
+                    chart1.notifyDataSetChanged()
+                    chart1.invalidate()
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+            .apply { compositeDisposable.add(this) }
+    }
+
+    fun setUltraDustChart() {
         MainApplication.database
             .bleReceiveDao()
             .getAllPM2_5()
@@ -147,7 +170,127 @@ class DustMainActivity : AppCompatActivity() {
                         it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
                         "초미세"
                     ).apply {
+                        color = ColorTemplate.rgb("#86A83E")
+                        setDrawCircles(false)
+                        setDrawValues(false)
+                        fillAlpha = 65
+                        fillColor = ColorTemplate.getHoloBlue()
+                        highLightColor = Color.rgb(176, 193, 126)
+                        setDrawCircleHole(false)
+                    })
+
+                    chart1.notifyDataSetChanged()
+                    chart1.invalidate()
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+            .apply { compositeDisposable.add(this) }
+    }
+
+    fun setSuperUltraDustChart() {
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllPM1()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    chart1.data.clearValues()
+                    chart1.data.addDataSet(LineDataSet(
+                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
+                        "극초미세"
+                    ).apply {
+                        color = ColorTemplate.rgb("#122716")
+                        setDrawCircles(false)
+                        setDrawValues(false)
+                        fillAlpha = 65
+                        fillColor = ColorTemplate.getHoloBlue()
+                        highLightColor = Color.rgb(176, 193, 126)
+                        setDrawCircleHole(false)
+                    })
+
+                    chart1.notifyDataSetChanged()
+                    chart1.invalidate()
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+            .apply { compositeDisposable.add(this) }
+    }
+
+    fun setAll() {
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllPM10()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    chart1.data.clearValues()
+                    chart1.data.addDataSet(LineDataSet(
+                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
+                        "미세"
+                    ).apply {
                         color = ColorTemplate.rgb("#B0C17E")
+                        setDrawCircles(false)
+                        setDrawValues(false)
+                        fillAlpha = 65
+                        fillColor = ColorTemplate.getHoloBlue()
+                        highLightColor = Color.rgb(176, 193, 126)
+                        setDrawCircleHole(false)
+                    })
+
+                    chart1.notifyDataSetChanged()
+                    chart1.invalidate()
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+            .apply { compositeDisposable.add(this) }
+
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllPM2_5()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    chart1.data.clearValues()
+                    chart1.data.addDataSet(LineDataSet(
+                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
+                        "초미세"
+                    ).apply {
+                        color = ColorTemplate.rgb("#86A83E")
+                        setDrawCircles(false)
+                        setDrawValues(false)
+                        fillAlpha = 65
+                        fillColor = ColorTemplate.getHoloBlue()
+                        highLightColor = Color.rgb(176, 193, 126)
+                        setDrawCircleHole(false)
+                    })
+
+                    chart1.notifyDataSetChanged()
+                    chart1.invalidate()
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+            .apply { compositeDisposable.add(this) }
+
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllPM1()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    chart1.data.clearValues()
+                    chart1.data.addDataSet(LineDataSet(
+                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
+                        "극초미세"
+                    ).apply {
+                        color = ColorTemplate.rgb("#122716")
                         setDrawCircles(false)
                         setDrawValues(false)
                         fillAlpha = 65
@@ -183,14 +326,14 @@ class DustMainActivity : AppCompatActivity() {
 
     fun startPeriod() {
 
-//        var addTask = object : TimerTask() {
-//            override fun run() {
-//                //주기적으로 실행할 작업 추가
-//                BleManager.instance.writeQueue(BleManager.Command.PM1, Date())
-//            }
-//        }
-//
-//        timer.schedule(addTask, 0, 5 * 1000) //// 0초후 첫실행, Interval분마다 계속실행
+        var addTask = object : TimerTask() {
+            override fun run() {
+                //주기적으로 실행할 작업 추가
+                BleManager.instance.writeQueue(BleManager.Command.PM1, Date())
+            }
+        }
+
+        timer.schedule(addTask, 0, 5 * 1000) //// 0초후 첫실행, Interval분마다 계속실행
     }
 
     fun stopPeriod() {
@@ -198,76 +341,22 @@ class DustMainActivity : AppCompatActivity() {
         if (timer != null) timer.cancel()
     }
 
-    fun LineChartDummyData() {
-        var dataSet = LineDataSet(
-            listOf(
-//                Entry(10f, 11f),
-//                Entry(20f, 87f),
-//                Entry(30f, 80f),
-//                Entry(40f, 89f),
-//                Entry(50f, 54f),
-//                Entry(60f, 25f)
-            ), "미세"
-        )
 
-
-        dataSet.apply {
-            color = ColorTemplate.rgb("#B0C17E")
-            setDrawCircles(false)
-            setDrawValues(false)
-            fillAlpha = 65
-            fillColor = ColorTemplate.getHoloBlue()
-            highLightColor = Color.rgb(176, 193, 126)
-            setDrawCircleHole(false)
-        }
-
-        val dataSet1 = LineDataSet(
-            listOf(
-//                Entry(10f, 34f),
-//                Entry(20f, 43f),
-//                Entry(30f, 56f),
-//                Entry(40f, 97f),
-//                Entry(50f, 73f),
-//                Entry(60f, 97f)
-            ), "초미세"
-        )
-
-        dataSet1.apply {
-            color = ColorTemplate.rgb("#86A83E")
-            setDrawCircles(false)
-            setDrawValues(false)
-            fillAlpha = 65
-            fillColor = ColorTemplate.getHoloBlue()
-            highLightColor = Color.rgb(134, 193, 126)
-            setDrawCircleHole(false)
-        }
-
-        val dataSet2 = LineDataSet(
-            listOf(
-//                Entry(10f, 68f),
-//                Entry(20f, 149f),
-//                Entry(30f, 98f),
-//                Entry(40f, 63f),
-//                Entry(50f, 72f),
-//                Entry(60f, 80f)
-            ), "극초미세"
-        )
-        dataSet2.apply {
-            color = ColorTemplate.rgb("#122716")
-            setDrawCircles(false)
-            setDrawValues(false)
-            fillAlpha = 65
-            fillColor = ColorTemplate.getHoloBlue()
-            highLightColor = Color.rgb(134, 193, 126)
-            setDrawCircleHole(false)
-        }
-
-        val lineData = LineData(dataSet, dataSet1, dataSet2)
-        chart1.apply {
-            description.isEnabled = false // disable description text
-            data = lineData
-        }
-    }
+//        dataSet2.apply {
+//            color = ColorTemplate.rgb("#122716")
+//            setDrawCircles(false)
+//            setDrawValues(false)
+//            fillAlpha = 65
+//            fillColor = ColorTemplate.getHoloBlue()
+//            highLightColor = Color.rgb(134, 193, 126)
+//            setDrawCircleHole(false)
+//        }
+//
+//        val lineData = LineData(dataSet, dataSet1, dataSet2)
+//        chart1.apply {
+//            description.isEnabled = false // disable description text
+//            data = lineData
+//        }
 
     override fun onDestroy() {
         super.onDestroy()

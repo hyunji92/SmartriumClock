@@ -53,12 +53,6 @@ class SearchHardwareActivity : AppCompatActivity() {
         // 스캔 시작
         BleManager.instance.startScan()
 
-        /*if (!isConnected) {
-            empty_text.visibility = View.VISIBLE
-        } else {
-            empty_text.visibility = View.GONE
-        }*/
-
     }
 
     override fun onResume() {

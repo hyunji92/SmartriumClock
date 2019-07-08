@@ -48,6 +48,12 @@
         <activity
                 android:name=".setting.MyPageActivity"
                 android:launchMode="singleTask"/>
+
+        <receiver
+                android:name=".receiver.AlarmBroadcastReceiver"
+                android:enabled="true"
+                android:exported="true"></receiver>
+
     </application>
 
 </manifest>

@@ -30,7 +30,7 @@ class SellectPlantActivity : AppCompatActivity() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
 
-            //this.finish()
+            this.finish()
         }
 
     }

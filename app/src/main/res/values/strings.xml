@@ -5,4 +5,5 @@
     <string name="title_ultra">ultra_dust</string>
     <string name="title_super_ultra_dust">super_ultra_dust</string>
     <string name="title_setting">setting</string>
+    <string name="notification_channel_id">notification</string>
 </resources>

@@ -19,6 +19,18 @@ interface BleReceiveDao {
     @Query("SELECT * FROM BleReceive where command = '02' order by date desc")
     fun getAllPM2_5(): Observable<List<BleReceive>>
 
+    @Query("SELECT * FROM BleReceive where command = '03' order by date desc")
+    fun getAllPM1(): Observable<List<BleReceive>>
+
+    @Query("SELECT * FROM BleReceive where command = '04' order by date desc")
+    fun getAllTemperature(): Observable<List<BleReceive>>
+
+    @Query("SELECT * FROM BleReceive where command = '05' order by date desc")
+    fun getAllHumidity(): Observable<List<BleReceive>>
+
+    @Query("SELECT * FROM BleReceive where command = '06' order by date desc")
+    fun getAllIlluminance(): Observable<List<BleReceive>>
+
     @Query("SELECT * FROM BleReceive")
     fun getAllFlowable(): Flowable<List<BleReceive>>
 

@@ -128,7 +128,7 @@ class BleManager {
         )
 
         // scan settings
-        // set low power scan mode ( BLE 만 스캔 )
+        // setDustChart low power scan mode ( BLE 만 스캔 )
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .build()
@@ -354,7 +354,7 @@ class BleManager {
             // 기기 연결 상태가 변경되는거에 따라 처리
             if (newStatus == BluetoothProfile.STATE_CONNECTED) {
 
-                // set the connection flag
+                // setDustChart the connection flag
                 isConnected = true
 
                 Log.d(TAG, "Connected to the GATT server")
