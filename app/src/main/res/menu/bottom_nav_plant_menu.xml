@@ -5,26 +5,26 @@
 	<item
 		android:id="@+id/navigation_all"
 		android:icon="@drawable/all_icon"
-		tools:ignore="MenuTitle"/>
+		android:title="@string/dust_all"/>
 	
 	<item
 		android:id="@+id/navigation_temperature"
 		android:icon="@drawable/temperature_icon"
-		tools:ignore="MenuTitle" />
+		android:title="온도"/>
 	
 	<item
 		android:id="@+id/navigation_huminity"
 		android:icon="@drawable/huminity_icon"
-		tools:ignore="MenuTitle"/>
+		android:title="습도"/>
 	
 	<item
 		android:id="@+id/navigation_illu"
 		android:icon="@drawable/illuminance_icon"
-		tools:ignore="MenuTitle"/>
+		android:title="조도"/>
 	
 	<item
 		android:id="@+id/navigation_setting"
 		android:icon="@drawable/setting_icon"
-		tools:ignore="MenuTitle" />
+		android:title="@string/setting"/>
 
 </menu>

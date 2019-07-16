@@ -13,7 +13,6 @@
             android:icon="@mipmap/ic_launcher"
             android:label="SmartriumClock"
             android:launchMode="singleTask"
-            android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/Theme.AppCompat.NoActionBar">
 
@@ -49,10 +48,7 @@
                 android:name=".setting.MyPageActivity"
                 android:launchMode="singleTask"/>
 
-        <receiver
-                android:name=".receiver.AlarmBroadcastReceiver"
-                android:enabled="true"
-                android:exported="true"></receiver>
+
 
     </application>
 

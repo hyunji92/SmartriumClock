@@ -13,6 +13,7 @@ class TutorialActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tutorial)
+
         var arrayList = object : ArrayList<String>() {
             init {
                 add("drawable/tutotial_0.png")

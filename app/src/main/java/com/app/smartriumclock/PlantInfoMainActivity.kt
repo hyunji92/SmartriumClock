@@ -2,45 +2,64 @@ package com.app.smartriumclock
 
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
 import com.app.smartriumclock.model.BleReceive
 import com.app.smartriumclock.setting.MyPageActivity
 import com.app.smartriumclock.setting.SettingActivity
 import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import kotlinx.android.synthetic.main.activity_dust_main.*
+import kotlinx.android.synthetic.main.activity_plant_info_main.*
+import kotlinx.android.synthetic.main.activity_plant_info_main.mypage_btn
+import kotlinx.android.synthetic.main.activity_plant_info_main.toolbar
+
+import kotlinx.android.synthetic.main.activity_plant_main.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class PlantInfoMainActivity : AppCompatActivity() {
+
+
+class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    override fun onNavigationItemSelected(p0: MenuItem): Boolean {
+        dl_main_drawer_root.closeDrawer(GravityCompat.START)
+        return false
+    }
 
     val timer by lazy { Timer() }
 
     val compositeDisposable = CompositeDisposable()
 
+    lateinit var drawerToggle: ActionBarDrawerToggle
+    lateinit var drawerToggle2: ActionBarDrawerToggle
+
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_all -> {
-
+                setAll()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_temperature -> {
-
+                setTemperatureChart()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_huminity -> {
-
+                setHumidityChart()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_illu -> {
-
+                setIlluminanceChart()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_setting -> {
@@ -53,6 +72,38 @@ class PlantInfoMainActivity : AppCompatActivity() {
         }
         false
     }
+    override fun onBackPressed() {
+        super.onBackPressed()
+        if (dl_main_drawer_root.isDrawerOpen(GravityCompat.START)) {
+            dl_main_drawer_root.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
+
+    }
+
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        drawerToggle.syncState()
+        drawerToggle2.syncState()
+
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        drawerToggle.onConfigurationChanged(newConfig)
+        drawerToggle2.onConfigurationChanged(newConfig)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        if (drawerToggle.onOptionsItemSelected(item)) {
+            return true
+        } else if (drawerToggle2.onOptionsItemSelected(item)) {
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,6 +113,26 @@ class PlantInfoMainActivity : AppCompatActivity() {
 
         val navView: BottomNavigationView = findViewById(R.id.nav_plant_view)
         navView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener)
+
+        drawerToggle = ActionBarDrawerToggle(
+            this,
+            dl_main_drawer_root,
+            toolbar,
+            R.string.drawer_open,
+            R.string.drawer_close
+        )
+        dl_main_drawer_root.addDrawerListener(drawerToggle)
+        nv_main_navigation_root.setNavigationItemSelectedListener(this)
+
+        drawerToggle2 = ActionBarDrawerToggle(
+            this,
+            dl_main_drawer_root,
+            toolbar,
+            R.string.drawer_open,
+            R.string.drawer_close
+        )
+        dl_main_drawer_root.addDrawerListener(drawerToggle2)
+        navigation_view_second.setNavigationItemSelectedListener(this)
 
         mypage_btn.setOnClickListener {
             val intent = Intent(this, MyPageActivity::class.java)
@@ -100,30 +171,138 @@ class PlantInfoMainActivity : AppCompatActivity() {
 
         startPeriod()
 
-        val left = chart1.axisLeft
-        val right = chart1.axisRight
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllTemperature()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    temper_num.text = it.last().data.toFloat().toString()
+
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllHumidity()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    humidity_num.text = it.last().data.toFloat().toString()
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllIlluminance()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    illu_num.text = it.last().data.toFloat().toString()
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+
+        val left = plant_chart.axisLeft
+        val right = plant_chart.axisRight
         left.apply {
-            setDrawLabels(false) // no axis labels
+            setDrawLabels(true) // no axis labels
             setDrawAxisLine(false) // no axis line
             setDrawGridLines(false) // no grid lines
             setDrawZeroLine(true) // draw a zero line
         }
 
         right.apply {
-            setDrawLabels(false) // no axis labels
+            setDrawLabels(true) // no axis labels
             setDrawAxisLine(false) // no axis line
             setDrawGridLines(false) // no grid lines
             setDrawZeroLine(true) // draw a zero line
         }
 
-        chart1.apply {
-            axisRight.isEnabled = false // no right axis
-            axisLeft.isEnabled = false // no right axis
+        plant_chart.apply {
+            axisRight.isEnabled = true // no right axis
+            axisLeft.isEnabled = true // no right axis
         }
 
-
+        LineChartDummyData()
     }
 
+    fun LineChartDummyData() {
+        var dataSet = LineDataSet(
+            listOf(
+//                Entry(10f, 11f),
+//                Entry(20f, 87f),
+//                Entry(30f, 80f),
+//                Entry(40f, 89f),
+//                Entry(50f, 54f),
+//                Entry(60f, 25f)
+            ), "미세"
+        )
+
+
+        dataSet.apply {
+            color = ColorTemplate.rgb("#B0C17E")
+            setDrawCircles(false)
+            setDrawValues(false)
+            fillAlpha = 65
+            fillColor = ColorTemplate.getHoloBlue()
+            highLightColor = Color.rgb(176, 193, 126)
+            setDrawCircleHole(false)
+        }
+
+        val dataSet1 = LineDataSet(
+            listOf(
+//                Entry(10f, 34f),
+//                Entry(20f, 43f),
+//                Entry(30f, 56f),
+//                Entry(40f, 97f),
+//                Entry(50f, 73f),
+//                Entry(60f, 97f)
+            ), "초미세"
+        )
+
+        dataSet1.apply {
+            color = ColorTemplate.rgb("#86A83E")
+            setDrawCircles(false)
+            setDrawValues(false)
+            fillAlpha = 65
+            fillColor = ColorTemplate.getHoloBlue()
+            highLightColor = Color.rgb(134, 193, 126)
+            setDrawCircleHole(false)
+        }
+
+        val dataSet2 = LineDataSet(
+            listOf(
+//                Entry(10f, 68f),
+//                Entry(20f, 149f),
+//                Entry(30f, 98f),
+//                Entry(40f, 63f),
+//                Entry(50f, 72f),
+//                Entry(60f, 80f)
+            ), "극초미세"
+        )
+        dataSet2.apply {
+            color = ColorTemplate.rgb("#122716")
+            setDrawCircles(false)
+            setDrawValues(false)
+            fillAlpha = 65
+            fillColor = ColorTemplate.getHoloBlue()
+            highLightColor = Color.rgb(134, 193, 126)
+            setDrawCircleHole(false)
+        }
+
+        val lineData = LineData(dataSet, dataSet1, dataSet2)
+        plant_chart.apply {
+            description.isEnabled = false // disable description text
+            data = lineData
+        }
+    }
 
     fun setTemperatureChart() {
         MainApplication.database
@@ -132,8 +311,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    chart1.data.clearValues()
-                    chart1.data.addDataSet(LineDataSet(
+                    plant_chart.data.clearValues()
+                    plant_chart.data.addDataSet(LineDataSet(
                         it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
                         "온도"
                     ).apply {
@@ -146,8 +325,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
                         setDrawCircleHole(false)
                     })
 
-                    chart1.notifyDataSetChanged()
-                    chart1.invalidate()
+                    plant_chart.notifyDataSetChanged()
+                    plant_chart.invalidate()
                 },
                 {
                     it.printStackTrace()
@@ -163,8 +342,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    chart1.data.clearValues()
-                    chart1.data.addDataSet(LineDataSet(
+                    plant_chart.data.clearValues()
+                    plant_chart.data.addDataSet(LineDataSet(
                         it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
                         "습도"
                     ).apply {
@@ -176,9 +355,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
                         highLightColor = Color.rgb(176, 193, 126)
                         setDrawCircleHole(false)
                     })
-
-                    chart1.notifyDataSetChanged()
-                    chart1.invalidate()
+                    plant_chart.notifyDataSetChanged()
+                    plant_chart.invalidate()
                 },
                 {
                     it.printStackTrace()
@@ -194,8 +372,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    chart1.data.clearValues()
-                    chart1.data.addDataSet(LineDataSet(
+                    plant_chart.data.clearValues()
+                    plant_chart.data.addDataSet(LineDataSet(
                         it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
                         "조도"
                     ).apply {
@@ -208,8 +386,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
                         setDrawCircleHole(false)
                     })
 
-                    chart1.notifyDataSetChanged()
-                    chart1.invalidate()
+                    plant_chart.notifyDataSetChanged()
+                    plant_chart.invalidate()
                 },
                 {
                     it.printStackTrace()
@@ -225,8 +403,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    chart1.data.clearValues()
-                    chart1.data.addDataSet(LineDataSet(
+                    plant_chart.data.clearValues()
+                    plant_chart.data.addDataSet(LineDataSet(
                         it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
                         "온도"
                     ).apply {
@@ -239,8 +417,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
                         setDrawCircleHole(false)
                     })
 
-                    chart1.notifyDataSetChanged()
-                    chart1.invalidate()
+                    plant_chart.notifyDataSetChanged()
+                    plant_chart.invalidate()
                 },
                 {
                     it.printStackTrace()
@@ -254,8 +432,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    chart1.data.clearValues()
-                    chart1.data.addDataSet(LineDataSet(
+                    plant_chart.data.clearValues()
+                    plant_chart.data.addDataSet(LineDataSet(
                         it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
                         "습도"
                     ).apply {
@@ -268,8 +446,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
                         setDrawCircleHole(false)
                     })
 
-                    chart1.notifyDataSetChanged()
-                    chart1.invalidate()
+                    plant_chart.notifyDataSetChanged()
+                    plant_chart.invalidate()
                 },
                 {
                     it.printStackTrace()
@@ -283,8 +461,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    chart1.data.clearValues()
-                    chart1.data.addDataSet(LineDataSet(
+                    plant_chart.data.clearValues()
+                    plant_chart.data.addDataSet(LineDataSet(
                         it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
                         "조도"
                     ).apply {
@@ -297,8 +475,8 @@ class PlantInfoMainActivity : AppCompatActivity() {
                         setDrawCircleHole(false)
                     })
 
-                    chart1.notifyDataSetChanged()
-                    chart1.invalidate()
+                    plant_chart.notifyDataSetChanged()
+                    plant_chart.invalidate()
                 },
                 {
                     it.printStackTrace()

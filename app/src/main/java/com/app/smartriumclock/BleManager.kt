@@ -72,7 +72,7 @@ class BleManager {
     // Write Value Queue
     private val writeQueue = ArrayDeque<String>()
 
-    companion object {
+    companion   object {
         val instance = BleManager()
     }
 

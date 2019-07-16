@@ -30,6 +30,15 @@
 			android:layout_height="match_parent"
 			android:layout_gravity="start"
 			android:fitsSystemWindows="true" />
+
+		<!-- Second navigation drawer -->
+		<com.google.android.material.navigation.NavigationView
+				android:id="@+id/navigation_view_second"
+				app:menu="@menu/navigation_drawer"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:layout_gravity="end"
+				android:fitsSystemWindows="true"/>
 	
 	</androidx.drawerlayout.widget.DrawerLayout>
 

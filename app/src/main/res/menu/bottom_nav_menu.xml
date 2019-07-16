@@ -5,26 +5,26 @@
 	<item
 		android:id="@+id/navigation_all"
 		android:icon="@drawable/all_icon"
-		tools:ignore="MenuTitle"/>
+		android:title="@string/dust_all"/>
 	
 	<item
 		android:id="@+id/navigation_dust"
 		android:icon="@drawable/dust_icon"
-		tools:ignore="MenuTitle" />
+		android:title="@string/dust"/>
 	
 	<item
 		android:id="@+id/navigation_ultra_dust"
 		android:icon="@drawable/ultra_dust_icon"
-		tools:ignore="MenuTitle"/>
+		android:title="@string/ultra_dust"/>
 	
 	<item
 		android:id="@+id/navigation_super_ultra_dust"
 		android:icon="@drawable/super_ultra_dust_icon"
-		tools:ignore="MenuTitle"/>
+		android:title="@string/super_ultra_dust"/>
 	
 	<item
 		android:id="@+id/navigation_setting"
 		android:icon="@drawable/setting_icon"
-		tools:ignore="MenuTitle" />
+		android:title="@string/setting"/>
 
 </menu>

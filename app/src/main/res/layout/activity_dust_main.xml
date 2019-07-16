@@ -7,267 +7,270 @@
                                                    android:layout_height="match_parent"
                                                    android:background="@color/white"
                                                    tools:context=".DustMainActivity">
-	
-	<FrameLayout
-		android:id="@+id/toolbar"
-		android:layout_width="match_parent"
-		android:layout_height="?attr/actionBarSize"
-		android:background="@color/main_background"
-		android:theme="?attr/actionBarTheme"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toTopOf="parent">
-		
-		<RelativeLayout
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:orientation="horizontal"
-			android:paddingStart="16dp"
-			android:paddingEnd="16dp">
-			
-			<!--<ImageView
-				android:id="@+id/settingButton"
-				android:layout_width="32dp"
-				android:layout_height="32dp"
-				android:layout_centerVertical="true"
-				android:background="@drawable/myinfo_icon" />-->
-			
-			<TextView
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_centerInParent="true"
-				android:text="실내 미세먼지 농도"
-				android:textSize="16dp"
-				android:textStyle="bold" />
-			
-			<ImageView
-				android:id="@+id/mypage_btn"
-				android:layout_width="32dp"
-				android:layout_height="36dp"
-				android:layout_alignParentEnd="true"
-				android:layout_centerVertical="true"
-				android:background="@drawable/smart_clock_icon" />
-		
-		</RelativeLayout>
-	
-	</FrameLayout>
-	
-	<ScrollView
-		android:layout_width="match_parent"
-		android:layout_height="0dp"
-		app:layout_constraintBottom_toTopOf="@+id/nav_view"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toBottomOf="@+id/toolbar">
-		
-		<LinearLayout
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:orientation="vertical">
-			
-			<ImageView
-				android:id="@+id/home"
-				android:layout_width="100dp"
-				android:layout_height="100dp"
-				android:layout_gravity="center"
-				android:layout_marginTop="100dp"
-				android:background="@drawable/dust_home_icon" />
-			
-			<LinearLayout
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:layout_marginStart="50dp"
-				android:layout_marginTop="12dp"
-				android:layout_marginEnd="50dp"
-				android:layout_marginBottom="40dp"
-				android:orientation="horizontal"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toStartOf="parent"
-				app:layout_constraintTop_toBottomOf="@+id/home">
-				
-				<LinearLayout
-					android:id="@+id/layout_dust"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:layout_weight="1"
-					android:orientation="vertical">
-					
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_gravity="center"
-						android:text="미세"
-						android:textColor="#000000" />
-					
-					<TextView
-						android:layout_width="63dp"
-						android:layout_height="55dp"
-						android:layout_gravity="center"
-						android:background="@drawable/hexagon_1"
-						android:gravity="center"
-						android:text="35"
-						android:textColor="@color/white"
-						android:textSize="20dp"
-						android:textStyle="bold" />
-				
-				</LinearLayout>
-				
-				<LinearLayout
-					android:id="@+id/layout_ultra_dust"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:layout_weight="0.9"
-					android:orientation="vertical">
-					
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_gravity="center"
-						android:text="초미세"
-						android:textColor="#000000" />
-					
-					<TextView
-						android:layout_width="63dp"
-						android:layout_height="55dp"
-						android:layout_gravity="center"
-						android:background="@drawable/hexagon_2"
-						android:gravity="center"
-						android:text="65"
-						android:textColor="@color/white"
-						android:textSize="20dp"
-						android:textStyle="bold" />
-				</LinearLayout>
-				
-				<LinearLayout
-					android:id="@+id/layout_super_ultra_dust"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:layout_weight="0.8"
-					android:orientation="vertical">
-					
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_gravity="center"
-						android:text="극초미세"
-						android:textColor="#000000" />
-					
-					<TextView
-						android:layout_width="63dp"
-						android:layout_height="55dp"
-						android:layout_gravity="center"
-						android:background="@drawable/hexagon_4"
-						android:gravity="center"
-						android:text="105"
-						android:textColor="@color/white"
-						android:textSize="20dp"
-						android:textStyle="bold" />
-				
-				</LinearLayout>
-			
-			</LinearLayout>
-			
-			<com.github.mikephil.charting.charts.LineChart
-				android:id="@+id/chart1"
-				android:layout_width="match_parent"
-				android:layout_height="400dp" />
-			
-			<LinearLayout
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:orientation="vertical"
-				android:layout_marginTop="15dp">
-				
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:layout_gravity="center"
-					android:text="실내 미세먼지 정보"
-					android:textColor="#000000"
-					android:textSize="15dp"
-					android:textStyle="bold" />
-				
-				<View
-					android:layout_width="90dp"
-					android:layout_height="4dp"
-					android:layout_gravity="center"
-					android:layout_marginTop="7dp"
-					android:background="@color/main_background" />
-				
-				<LinearLayout
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:layout_margin="20dp"
-					android:orientation="horizontal">
-					
-					<TextView
-						android:layout_width="60dp"
-						android:layout_height="70dp"
-						android:layout_margin="10dp"
-						android:layout_weight="1"
-						android:background="@drawable/circle_green"
-						android:gravity="center"
-						android:text="일간"
-						android:textColor="@color/white"
-						android:textSize="18dp" />
-					
-					<TextView
-						android:layout_width="60dp"
-						android:layout_height="70dp"
-						android:layout_margin="10dp"
-						android:layout_weight="1"
-						android:background="@drawable/circle_green"
-						android:gravity="center"
-						android:text="주간"
-						android:textColor="@color/white"
-						android:textSize="18dp" />
-					
-					<TextView
-						android:layout_width="60dp"
-						android:layout_height="70dp"
-						android:layout_margin="10dp"
-						android:layout_weight="1"
-						android:background="@drawable/circle_green"
-						android:gravity="center"
-						android:text="월간"
-						android:textColor="@color/white"
-						android:textSize="18dp" />
-					
-					<TextView
-						android:layout_width="60dp"
-						android:layout_height="70dp"
-						android:layout_margin="10dp"
-						android:layout_weight="1"
-						android:background="@drawable/circle_green"
-						android:gravity="center"
-						android:text="연간"
-						android:textColor="@color/white"
-						android:textSize="18dp" />
-				
-				</LinearLayout>
-			
-			
-			</LinearLayout>
-		
-		
-		</LinearLayout>
-	
-	</ScrollView>
-	
-	
-	<com.google.android.material.bottomnavigation.BottomNavigationView
-		android:id="@+id/nav_view"
-		android:layout_width="0dp"
-		android:layout_height="wrap_content"
-		android:layout_marginStart="0dp"
-		android:layout_marginEnd="0dp"
-		android:focusable="false"
-		app:itemBackground="@drawable/item_bg"
-		android:background="@color/main_background"
-		app:layout_constraintBottom_toBottomOf="parent"
-		app:layout_constraintLeft_toLeftOf="parent"
-		app:layout_constraintRight_toRightOf="parent"
-		app:labelVisibilityMode="unlabeled"
-		app:menu="@menu/bottom_nav_menu" />
+
+    <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/main_background"
+            android:theme="?attr/actionBarTheme"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+        <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                >
+
+            <!--<ImageView
+                android:id="@+id/settingButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_centerVertical="true"
+                android:background="@drawable/myinfo_icon" />-->
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="실내 미세먼지 농도"
+                    android:textSize="16dp"
+                    android:textStyle="bold"/>
+
+            <ImageView
+                    android:id="@+id/mypage_btn"
+                    android:layout_width="32dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/smart_clock_icon"/>
+
+        </RelativeLayout>
+
+    </androidx.appcompat.widget.Toolbar>
+
+    <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/nav_view"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+            <ImageView
+                    android:id="@+id/home"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="100dp"
+                    android:background="@drawable/dust_home_icon"/>
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="50dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="50dp"
+                    android:layout_marginBottom="40dp"
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/home">
+
+                <LinearLayout
+                        android:id="@+id/layout_dust"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="미세"
+                            android:textColor="#000000"/>
+
+                    <TextView
+                            android:id="@+id/dust_num"
+                            android:layout_width="63dp"
+                            android:layout_height="55dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/hexagon_1"
+                            android:gravity="center"
+                            android:text="35"
+                            android:textColor="@color/white"
+                            android:textSize="20dp"
+                            android:textStyle="bold"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/layout_ultra_dust"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.9"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="초미세"
+                            android:textColor="#000000"/>
+
+                    <TextView
+                            android:id="@+id/ultra_dust_num"
+                            android:layout_width="63dp"
+                            android:layout_height="55dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/hexagon_2"
+                            android:gravity="center"
+                            android:text="65"
+                            android:textColor="@color/white"
+                            android:textSize="20dp"
+                            android:textStyle="bold"/>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/layout_super_ultra_dust"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="극초미세"
+                            android:textColor="#000000"/>
+
+                    <TextView
+                            android:id="@+id/super_ultra_dust_num"
+                            android:layout_width="63dp"
+                            android:layout_height="55dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/hexagon_4"
+                            android:gravity="center"
+                            android:text="105"
+                            android:textColor="@color/white"
+                            android:textSize="20dp"
+                            android:textStyle="bold"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/dust_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="400dp"/>
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="15dp">
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="실내 미세먼지 정보"
+                        android:textColor="#000000"
+                        android:textSize="15dp"
+                        android:textStyle="bold"/>
+
+                <View
+                        android:layout_width="90dp"
+                        android:layout_height="4dp"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="7dp"
+                        android:background="@color/main_background"/>
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="20dp"
+                        android:orientation="horizontal">
+
+                    <TextView
+                            android:layout_width="60dp"
+                            android:layout_height="70dp"
+                            android:layout_margin="10dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/circle_green"
+                            android:gravity="center"
+                            android:text="일간"
+                            android:textColor="@color/white"
+                            android:textSize="18dp"/>
+
+                    <TextView
+                            android:layout_width="60dp"
+                            android:layout_height="70dp"
+                            android:layout_margin="10dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/circle_green"
+                            android:gravity="center"
+                            android:text="주간"
+                            android:textColor="@color/white"
+                            android:textSize="18dp"/>
+
+                    <TextView
+                            android:layout_width="60dp"
+                            android:layout_height="70dp"
+                            android:layout_margin="10dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/circle_green"
+                            android:gravity="center"
+                            android:text="월간"
+                            android:textColor="@color/white"
+                            android:textSize="18dp"/>
+
+                    <TextView
+                            android:layout_width="60dp"
+                            android:layout_height="70dp"
+                            android:layout_margin="10dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/circle_green"
+                            android:gravity="center"
+                            android:text="연간"
+                            android:textColor="@color/white"
+                            android:textSize="18dp"/>
+
+                </LinearLayout>
+
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+    </ScrollView>
+
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/nav_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:focusable="false"
+            app:itemBackground="@drawable/item_bg"
+            android:background="@color/main_background"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_alignParentBottom="true"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/bottom_nav_menu"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,4 +6,12 @@
     <string name="title_super_ultra_dust">super_ultra_dust</string>
     <string name="title_setting">setting</string>
     <string name="notification_channel_id">notification</string>
+    <string name="drawer_open">drawer open</string>
+    <string name="drawer_close">drawer close</string>
+    <string name="dust_all">전체</string>
+    <string name="dust">미세</string>
+    <string name="ultra_dust">초미세</string>
+    <string name="super_ultra_dust">극초미세</string>
+    <string name="setting">설정</string>
+    <string name="channel_id">smart_rium</string>
 </resources>

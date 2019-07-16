@@ -9,5 +9,4 @@ import com.app.smartriumclock.model.BleReceive
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun bleReceiveDao(): BleReceiveDao
-
 }
