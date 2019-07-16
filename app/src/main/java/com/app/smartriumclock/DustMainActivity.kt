@@ -24,6 +24,9 @@ import kotlinx.android.synthetic.main.activity_dust_main.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.text.SimpleDateFormat
 import java.util.*
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.formatter.ValueFormatter
+import java.util.concurrent.TimeUnit
 
 
 class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -192,16 +195,36 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         BleManager.instance.writeQueue(BleManager.Command.Illuminance, Date())
         BleManager.instance.writeQueue(BleManager.Command.Temperature, Date())
 
+        setAll()
         startPeriod()
+
+        var test = MainApplication.database
+            .bleReceiveDao()
+            .getAllPM10()
+
+        dust_num.text = test.takeLast(1).toString()
+
+
+        var test1 =  MainApplication.database
+            .bleReceiveDao()
+            .getAllPM2_5()
+
+        ultra_dust_num.text = test1.takeLast(1).toString()
+
+        var test2 =  MainApplication.database
+            .bleReceiveDao()
+            .getAllPM1()
+
+        super_ultra_dust_num.text = test2.takeLast(1).toString()
 
         MainApplication.database
             .bleReceiveDao()
             .getAllPM10()
+            .takeLast(2)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
                     dust_num.text = it.last().data.toFloat().toString()
-
                 },
                 {
                     it.printStackTrace()
@@ -210,6 +233,7 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         MainApplication.database
             .bleReceiveDao()
             .getAllPM2_5()
+            .takeLast(1)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
@@ -234,11 +258,29 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
         val left = dust_chart.axisLeft
         val right = dust_chart.axisRight
+
+        val xAxis = dust_chart.xAxis // x 축 설정
+        xAxis.apply {
+            position = XAxis.XAxisPosition.BOTTOM
+            valueFormatter = object : ValueFormatter() {
+
+                private val mFormat = SimpleDateFormat("HH:mm", Locale.KOREA)
+
+                override fun getFormattedValue(value: Float): String {
+
+                    val millis = TimeUnit.HOURS.toMillis(value.toLong())
+                    return mFormat.format(Date(millis))
+                }
+            }
+        }
+
         left.apply {
+            setLabelCount(6,true)
             setDrawLabels(true) // no axis labels
             setDrawAxisLine(false) // no axis line
             setDrawGridLines(false) // no grid lines
             setDrawZeroLine(true) // draw a zero line
+            granularity = 1f
         }
 
         right.apply {
@@ -250,7 +292,7 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
         dust_chart.apply {
             axisRight.isEnabled = true // no right axis
-            axisLeft.isEnabled = true // no right axis
+            axisLeft.isEnabled = true
         }
         LineChartDummyData()
 
