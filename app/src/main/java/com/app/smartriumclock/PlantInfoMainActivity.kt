@@ -10,6 +10,7 @@ import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import android.content.res.Configuration
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -36,15 +37,9 @@ import com.google.android.material.navigation.NavigationView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_plant_info_main.*
-import kotlinx.android.synthetic.main.activity_plant_info_main.mypage_btn
-import kotlinx.android.synthetic.main.activity_plant_info_main.toolbar
-
 import kotlinx.android.synthetic.main.activity_plant_main.*
-import kotlinx.android.synthetic.main.activity_plant_main.dl_main_drawer_root
-import kotlinx.android.synthetic.main.activity_plant_main.nv_main_navigation_root
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -57,30 +52,32 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
 
     val compositeDisposable = CompositeDisposable()
     //Data
-    var nav_item =  ArrayList<String>()
+    var nav_item = ArrayList<String>()
 
     lateinit var drawerToggle: ActionBarDrawerToggle
+
+    // Data Sets
+    private val temperatureDataSet by lazy { generateLineDataSet("온도", "#B0C17E") }
+    private val humidityDataSet by lazy { generateLineDataSet("습도", "#86A83E") }
+    private val illuminanceDataSet by lazy { generateLineDataSet("조도", "#122716") }
+
 
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_all -> {
-                setAll()
-                topNum()
+                setAllChart()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_temperature -> {
                 setTemperatureChart()
-                topNum()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_huminity -> {
                 setHumidityChart()
-                topNum()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_illu -> {
                 setIlluminanceChart()
-                topNum()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_setting -> {
@@ -92,6 +89,25 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         }
         false
     }
+
+
+    private fun generateLineDataSet(label: String, hex: String): LineDataSet {
+        return LineDataSet(listOf(), label).apply {
+            color = ColorTemplate.rgb(hex)
+            setDrawCircles(false)
+            setDrawValues(false)
+            mode = LineDataSet.Mode.CUBIC_BEZIER
+            fillAlpha = 65
+            fillColor = ColorTemplate.getHoloBlue()
+            highLightColor = Color.rgb(176, 193, 126)
+            setDrawCircleHole(false)
+
+            // Drawable
+            setDrawFilled(true)
+            fillDrawable = ColorDrawable(Color.parseColor(hex))
+        }
+    }
+
     override fun onBackPressed() {
         super.onBackPressed()
         if (dl_main_drawer_root.isDrawerOpen(GravityCompat.START)) {
@@ -119,7 +135,6 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         }
         return super.onOptionsItemSelected(item)
     }
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -162,11 +177,6 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
                 )
             )
             Log.d("PlantInfoMainActivity", "Command : ${command}, Date : ${date}, Data : ${data}")
-            if (data.toInt() > 40) {
-                nav_item.add("$date : 미세먼지 나쁨 ")
-            } else {
-                nav_item.add("$date : 미세먼지 좋음 ")
-            }
         }
 
 
@@ -190,96 +200,168 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         }
 
 
-        topNum()
+        setGraph("HH:mm")
+
+        day.setOnClickListener {
+            setGraph("HH:mm")
+        }
+        week.setOnClickListener {
+            setGraph("MM월 W주")
+        }
+
+        month.setOnClickListener {
+            setGraph("MM월")
+        }
+
+        year.setOnClickListener {
+            setGraph("yyyy년")
+        }
+
+    }
+
+    private fun setGraph(pattern: String) {
 
         val left = plant_chart.axisLeft
-        val right = plant_chart.axisRight
-
-
         val xAxis = plant_chart.xAxis // x 축 설정
         xAxis.apply {
             position = XAxis.XAxisPosition.BOTTOM
             valueFormatter = object : ValueFormatter() {
 
-                private val mFormat = SimpleDateFormat("HH:mm", Locale.KOREA)
-
+                private val mFormat = SimpleDateFormat(pattern, Locale.KOREA)
                 override fun getFormattedValue(value: Float): String {
-
-                    val millis = TimeUnit.HOURS.toMillis(value.toLong())
-                    return mFormat.format(Date(millis))
+                    //  val millis = TimeUnit.HOURS.toMillis(value.toLong())
+                    //  eturn mFormat.format(Date(millis))
+                    return mFormat.format(Date(value.toLong()))
                 }
             }
         }
-        left.apply {
-            setDrawLabels(true) // no axis labels
-            setDrawAxisLine(false) // no axis line
-            setDrawGridLines(false) // no grid lines
-            setDrawZeroLine(true) // draw a zero line
-        }
 
-        right.apply {
+        left.apply {
+            setLabelCount(8, true)
             setDrawLabels(true) // no axis labels
             setDrawAxisLine(false) // no axis line
             setDrawGridLines(false) // no grid lines
             setDrawZeroLine(true) // draw a zero line
+            granularity = 1f
         }
 
         plant_chart.apply {
-            axisRight.isEnabled = true // no right axis
-            axisLeft.isEnabled = true // no right axis
+            axisLeft.isEnabled = true
         }
-
-        LineChartDummyData()
     }
 
-    fun topNum(){
+    private fun setTemperature(data: BleReceive) {
+        temper_num.text = data.data.toInt().toString()
+        if (data.data.toInt() < 7) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                com.app.smartriumclock.notification.NotificationManager.sendNotification(
+                    this,
+                    1,
+                    com.app.smartriumclock.notification.NotificationManager.Channel.MESSAGE,
+                    getString(R.string.notification_channel_temper_title),
+                    getString(R.string.notification_channel_temper_description)
+                )
+                nowTime()?.let { it1 -> nav_item.add("$it1 - 온도 낮음!!") }
+            } else {
+                sendNotificationUnder(
+                    getString(R.string.notification_channel_temper_title),
+                    getString(R.string.notification_channel_temper_description)
+                )
+            }
+        }
+        recycler_drawer_list_plant.adapter?.notifyDataSetChanged()
+    }
+
+    private fun setHumidity(data: BleReceive) {
+        humidity_num.text = data.data.toInt().toString()
+
+    }
+
+    private fun setIlluminance(data: BleReceive) {
+        illu_num.text = data.data.toInt().toString()
+    }
+
+    @SuppressLint("CheckResult")
+    fun setAll() {
+        // 데이터셋 최초에 설정
+        plant_chart.data = LineData(listOf(temperatureDataSet, humidityDataSet, illuminanceDataSet))
+
         MainApplication.database
             .bleReceiveDao()
             .getAllTemperature()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    temper_num.text = it[it.count()-1].data.toInt().toString()
-                    if (it[it.count()-1].data.toInt() > 50) {
-//
-                    }
+                    temperatureDataSet.values =
+                        it.mapIndexed { index, bleReceive ->
+                            Entry(
+                                bleReceive.date.toFloat(),
+                                bleReceive.data.toFloat()
+                            )
+                        }
+                    plant_chart.data.notifyDataChanged()
+                    plant_chart.notifyDataSetChanged()
+                    plant_chart.invalidate()
+
+                    // Set Top PM10
+                    it.firstOrNull { receive -> receive.data.toLong() > 0 }?.run { setTemperature(this) }
                 },
                 {
                     it.printStackTrace()
                 }
             )
+
         MainApplication.database
             .bleReceiveDao()
             .getAllHumidity()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    humidity_num.text = it[it.count()-1].data.toInt().toString()
-                    if (it[it.count()-1].data.toInt() > 70) {
+                    humidityDataSet.values =
+                        it.mapIndexed { index, bleReceive ->
+                            Entry(
+                                bleReceive.date.toFloat(),
+                                bleReceive.data.toFloat()
+                            )
+                        }
+                    plant_chart.data.notifyDataChanged()
+                    plant_chart.notifyDataSetChanged()
+                    plant_chart.invalidate()
 
-                    }
+                    // Set Top PM2.5
+                    it.firstOrNull { receive -> receive.data.toLong() > 0 }?.run { setHumidity(this) }
                 },
                 {
                     it.printStackTrace()
                 }
             )
+
         MainApplication.database
             .bleReceiveDao()
             .getAllIlluminance()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    illu_num.text = it[it.count()-1].data.toInt().toString()
-                    if (it[it.count()-1].data.toInt() > 50) {
+                    illuminanceDataSet.values =
+                        it.mapIndexed { index, bleReceive ->
+                            Entry(
+                                bleReceive.date.toFloat(),
+                                bleReceive.data.toFloat()
+                            )
+                        }
+                    plant_chart.data.notifyDataChanged()
+                    plant_chart.notifyDataSetChanged()
+                    plant_chart.invalidate()
 
-                    }
-
+                    // Set Top PM1
+                    it.firstOrNull { receive -> receive.data.toLong() > 0 }?.run { setIlluminance(this) }
                 },
                 {
                     it.printStackTrace()
                 }
             )
     }
+
 
     @SuppressLint("WrongConstant")
     fun sendNotificationUnder(status: String, message: String) {
@@ -305,256 +387,29 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         nm.notify(1234, builder.build())
     }
 
-    fun LineChartDummyData() {
-        var dataSet = LineDataSet(
-            listOf(
-//                Entry(10f, 11f),
-//                Entry(20f, 87f),
-//                Entry(30f, 80f),
-//                Entry(40f, 89f),
-//                Entry(50f, 54f),
-//                Entry(60f, 25f)
-            ), "미세"
-        )
-
-
-        dataSet.apply {
-            color = ColorTemplate.rgb("#B0C17E")
-            setDrawCircles(false)
-            setDrawValues(false)
-            fillAlpha = 65
-            fillColor = ColorTemplate.getHoloBlue()
-            highLightColor = Color.rgb(176, 193, 126)
-            setDrawCircleHole(false)
-        }
-
-        val dataSet1 = LineDataSet(
-            listOf(
-//                Entry(10f, 34f),
-//                Entry(20f, 43f),
-//                Entry(30f, 56f),
-//                Entry(40f, 97f),
-//                Entry(50f, 73f),
-//                Entry(60f, 97f)
-            ), "초미세"
-        )
-
-        dataSet1.apply {
-            color = ColorTemplate.rgb("#86A83E")
-            setDrawCircles(false)
-            setDrawValues(false)
-            fillAlpha = 65
-            fillColor = ColorTemplate.getHoloBlue()
-            highLightColor = Color.rgb(134, 193, 126)
-            setDrawCircleHole(false)
-        }
-
-        val dataSet2 = LineDataSet(
-            listOf(
-//                Entry(10f, 68f),
-//                Entry(20f, 149f),
-//                Entry(30f, 98f),
-//                Entry(40f, 63f),
-//                Entry(50f, 72f),
-//                Entry(60f, 80f)
-            ), "극초미세"
-        )
-        dataSet2.apply {
-            color = ColorTemplate.rgb("#122716")
-            setDrawCircles(false)
-            setDrawValues(false)
-            fillAlpha = 65
-            fillColor = ColorTemplate.getHoloBlue()
-            highLightColor = Color.rgb(134, 193, 126)
-            setDrawCircleHole(false)
-        }
-
-        val lineData = LineData(dataSet, dataSet1, dataSet2)
-        plant_chart.apply {
-            description.isEnabled = false // disable description text
-            data = lineData
-        }
-    }
-
     fun setTemperatureChart() {
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllTemperature()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    plant_chart.data.clearValues()
-                    plant_chart.data.addDataSet(LineDataSet(
-                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
-                        "온도"
-                    ).apply {
-                        color = ColorTemplate.rgb("#B0C17E")
-                        setDrawCircles(false)
-                        setDrawValues(false)
-                        fillAlpha = 65
-                        fillColor = ColorTemplate.getHoloBlue()
-                        highLightColor = Color.rgb(176, 193, 126)
-                        setDrawCircleHole(false)
-                    })
-
-                    plant_chart.notifyDataSetChanged()
-                    plant_chart.invalidate()
-                },
-                {
-                    it.printStackTrace()
-                }
-            )
-            .apply { compositeDisposable.add(this) }
+        plant_chart.data = LineData(listOf(temperatureDataSet))
+        plant_chart.notifyDataSetChanged()
+        plant_chart.invalidate()
     }
 
     fun setHumidityChart() {
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllHumidity()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    plant_chart.data.clearValues()
-                    plant_chart.data.addDataSet(LineDataSet(
-                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
-                        "습도"
-                    ).apply {
-                        color = ColorTemplate.rgb("#86A83E")
-                        setDrawCircles(false)
-                        setDrawValues(false)
-                        fillAlpha = 65
-                        fillColor = ColorTemplate.getHoloBlue()
-                        highLightColor = Color.rgb(176, 193, 126)
-                        setDrawCircleHole(false)
-                    })
-                    plant_chart.notifyDataSetChanged()
-                    plant_chart.invalidate()
-                },
-                {
-                    it.printStackTrace()
-                }
-            )
-            .apply { compositeDisposable.add(this) }
+        plant_chart.data = LineData(listOf(humidityDataSet))
+        plant_chart.notifyDataSetChanged()
+        plant_chart.invalidate()
     }
 
     fun setIlluminanceChart() {
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllIlluminance()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    plant_chart.data.clearValues()
-                    plant_chart.data.addDataSet(LineDataSet(
-                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
-                        "조도"
-                    ).apply {
-                        color = ColorTemplate.rgb("#122716")
-                        setDrawCircles(false)
-                        setDrawValues(false)
-                        fillAlpha = 65
-                        fillColor = ColorTemplate.getHoloBlue()
-                        highLightColor = Color.rgb(176, 193, 126)
-                        setDrawCircleHole(false)
-                    })
-
-                    plant_chart.notifyDataSetChanged()
-                    plant_chart.invalidate()
-                },
-                {
-                    it.printStackTrace()
-                }
-            )
-            .apply { compositeDisposable.add(this) }
+        plant_chart.data = LineData(listOf(illuminanceDataSet))
+        plant_chart.notifyDataSetChanged()
+        plant_chart.invalidate()
     }
 
-    fun setAll() {
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllTemperature()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    plant_chart.data.clearValues()
-                    plant_chart.data.addDataSet(LineDataSet(
-                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
-                        "온도"
-                    ).apply {
-                        color = ColorTemplate.rgb("#B0C17E")
-                        setDrawCircles(false)
-                        setDrawValues(false)
-                        fillAlpha = 65
-                        fillColor = ColorTemplate.getHoloBlue()
-                        highLightColor = Color.rgb(176, 193, 126)
-                        setDrawCircleHole(false)
-                    })
+    fun setAllChart() {
+        plant_chart.data = LineData(listOf(temperatureDataSet, humidityDataSet, illuminanceDataSet))
 
-                    plant_chart.notifyDataSetChanged()
-                    plant_chart.invalidate()
-                },
-                {
-                    it.printStackTrace()
-                }
-            )
-            .apply { compositeDisposable.add(this) }
-
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllHumidity()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    plant_chart.data.clearValues()
-                    plant_chart.data.addDataSet(LineDataSet(
-                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
-                        "습도"
-                    ).apply {
-                        color = ColorTemplate.rgb("#86A83E")
-                        setDrawCircles(false)
-                        setDrawValues(false)
-                        fillAlpha = 65
-                        fillColor = ColorTemplate.getHoloBlue()
-                        highLightColor = Color.rgb(176, 193, 126)
-                        setDrawCircleHole(false)
-                    })
-
-                    plant_chart.notifyDataSetChanged()
-                    plant_chart.invalidate()
-                },
-                {
-                    it.printStackTrace()
-                }
-            )
-            .apply { compositeDisposable.add(this) }
-
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllIlluminance()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    plant_chart.data.clearValues()
-                    plant_chart.data.addDataSet(LineDataSet(
-                        it.mapIndexed { index, bleReceive -> Entry(index.toFloat(), bleReceive.data.toFloat()) },
-                        "조도"
-                    ).apply {
-                        color = ColorTemplate.rgb("#122716")
-                        setDrawCircles(false)
-                        setDrawValues(false)
-                        fillAlpha = 65
-                        fillColor = ColorTemplate.getHoloBlue()
-                        highLightColor = Color.rgb(176, 193, 126)
-                        setDrawCircleHole(false)
-                    })
-
-                    plant_chart.notifyDataSetChanged()
-                    plant_chart.invalidate()
-                },
-                {
-                    it.printStackTrace()
-                }
-            )
-            .apply { compositeDisposable.add(this) }
+        plant_chart.notifyDataSetChanged()
+        plant_chart.invalidate()
     }
 
     fun nowTime(): String? {
@@ -581,7 +436,7 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
             }
         }
 
-        timer.schedule(addTask, 0, 5 * 1000) //// 0초후 첫실행, Interval분마다 계속실행
+        timer.schedule(addTask, 0, 10 * 1000) //// 0초후 첫실행, Interval분마다 계속실행
     }
 
     fun stopPeriod() {
@@ -596,26 +451,28 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         compositeDisposable.dispose()
     }
 
-    private class ListAdapter(context:Context, data:List<String>): RecyclerView.Adapter<ListAdapter.myViewHolder>() {
+    private class ListAdapter(context: Context, data: List<String>) : RecyclerView.Adapter<ListAdapter.myViewHolder>() {
 
-        internal var context:Context
-        internal var mData:List<String>
+        internal var context: Context
+        internal var mData: List<String>
 
-        init{
+        init {
             this.context = context
             this.mData = data
         }
 
         override fun getItemCount(): Int = mData.size
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType:Int):ListAdapter.myViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListAdapter.myViewHolder {
             val view = LayoutInflater.from(context).inflate(R.layout.notification_list_item, parent, false)
             return myViewHolder(view)
         }
-        override fun onBindViewHolder(holder:ListAdapter.myViewHolder, position:Int) {
+
+        override fun onBindViewHolder(holder: ListAdapter.myViewHolder, position: Int) {
             holder.nav.text = mData[position]
         }
-        inner class myViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
+
+        inner class myViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             internal var nav: TextView = itemView.findViewById(R.id.nav) as TextView
         }
     }

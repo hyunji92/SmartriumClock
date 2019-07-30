@@ -32,18 +32,20 @@ public class NotificationManager {
         NotificationChannel channelMessage = null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             channelMessage = new NotificationChannel(Channel.MESSAGE,
-                    context.getString(R.string.notification_channel_dust_title), android.app.NotificationManager.IMPORTANCE_DEFAULT);
+                    context.getString(R.string.notification_channel_dust_title), android.app.NotificationManager.IMPORTANCE_LOW);
             channelMessage.setDescription(context.getString(R.string.notification_channel_dust_description));
             channelMessage.setGroup(GROUP_TED_PARK);
             channelMessage.setLightColor(Color.GREEN);
+            channelMessage.enableVibration(false);
             channelMessage.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
             getManager(context).createNotificationChannel(channelMessage);
 
             NotificationChannel channelComment = new NotificationChannel(Channel.COMMENT,
-                    context.getString(R.string.notification_channel_ultra_dust_title), android.app.NotificationManager.IMPORTANCE_DEFAULT);
+                    context.getString(R.string.notification_channel_ultra_dust_title), android.app.NotificationManager.IMPORTANCE_LOW);
             channelComment.setDescription(context.getString(R.string.notification_channel_ultra_dust_description));
             channelComment.setGroup(GROUP_TED_PARK);
             channelComment.setLightColor(Color.BLUE);
+            channelMessage.enableVibration(false);
             channelComment.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             getManager(context).createNotificationChannel(channelComment);
 
@@ -77,6 +79,7 @@ public class NotificationManager {
                     .setContentTitle(title)
                     .setContentText(body)
                     .setSmallIcon(getSmallIcon())
+                    .setOnlyAlertOnce(true)
                     .setAutoCancel(true);
         }
 

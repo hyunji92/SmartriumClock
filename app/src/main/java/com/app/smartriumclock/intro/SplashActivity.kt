@@ -32,7 +32,7 @@ class SplashActivity : AppCompatActivity() {
             }, 2000)
 
             editor.putBoolean("first_user", true)
-            editor.commit()
+            editor.apply()
         } else {
             val intent = Intent(this, SearchHardwareActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)

@@ -1,6 +1,7 @@
 package com.app.smartriumclock.search
 
 import android.bluetooth.BluetoothDevice
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -9,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import android.view.View
 import com.app.smartriumclock.BleManager
+import com.app.smartriumclock.DustMainActivity
 import com.app.smartriumclock.R
 import kotlinx.android.synthetic.main.activity_search_hardware.*
 
@@ -28,6 +30,8 @@ class SearchHardwareActivity : AppCompatActivity() {
             yellow_next_btn.isEnabled = field
         }
 
+    var userFirst: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search_hardware)
@@ -35,12 +39,27 @@ class SearchHardwareActivity : AppCompatActivity() {
         // Disable Button
         isConnected = false
 
+        val prefs = getSharedPreferences("my_pref", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+
+        userFirst = prefs.getBoolean("first_user_select", false)
         // Click Listener
-        yellow_next_btn.setOnClickListener {
-            val intent = Intent(this, SellectPlantActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            startActivity(intent)
-            this.finish()
+        if (!userFirst) {
+            yellow_next_btn.setOnClickListener {
+                val intent = Intent(this, SellectPlantActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                startActivity(intent)
+                this.finish()
+            }
+            editor.putBoolean("first_user_select", true)
+            editor.apply()
+        } else {
+            yellow_next_btn.setOnClickListener {
+                val intent = Intent(this, DustMainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                startActivity(intent)
+                this.finish()
+            }
         }
 
         // 리사이클러뷰 설정

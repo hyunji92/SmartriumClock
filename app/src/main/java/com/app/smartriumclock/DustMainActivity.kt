@@ -194,17 +194,34 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             adapter = listAdapter
         }
 
+        setGraph("HH:mm")
+
+        day.setOnClickListener {
+            setGraph("HH:mm")
+        }
+        week.setOnClickListener {
+            setGraph("MM월 W주")
+        }
+
+        month.setOnClickListener {
+            setGraph("MM월")
+        }
+
+        year.setOnClickListener {
+            setGraph("yyyy년")
+        }
+
+    }
+
+    private fun setGraph(pattern: String) {
 
         val left = dust_chart.axisLeft
-
-
         val xAxis = dust_chart.xAxis // x 축 설정
         xAxis.apply {
             position = XAxis.XAxisPosition.BOTTOM
             valueFormatter = object : ValueFormatter() {
 
-                private val mFormat = SimpleDateFormat("HH:mm", Locale.KOREA)
-                //MM월 W주
+                private val mFormat = SimpleDateFormat(pattern, Locale.KOREA)
                 override fun getFormattedValue(value: Float): String {
                     //  val millis = TimeUnit.HOURS.toMillis(value.toLong())
                     //  eturn mFormat.format(Date(millis))
@@ -225,15 +242,29 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         dust_chart.apply {
             axisLeft.isEnabled = true
         }
-        //LineChartDummyData()
-
-
     }
 
     private fun setTopPM10(data: BleReceive) {
         dust_num.text = data.data.toInt().toString()
 
-        if (data.data.toInt() > 50) {
+
+        if (data.data.toInt() < 30) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                com.app.smartriumclock.notification.NotificationManager.sendNotification(
+                    this,
+                    1,
+                    com.app.smartriumclock.notification.NotificationManager.Channel.MESSAGE,
+                    getString(R.string.notification_channel_dust_title_good),
+                    getString(R.string.notification_channel_dust_description_good)
+                )
+                nowTime()?.let { it1 -> nav_item.add("$it1 - 미세먼지 좋음") }
+            } else {
+                sendNotificationUnder(
+                    getString(R.string.notification_channel_dust_title_good),
+                    getString(R.string.notification_channel_dust_description_good)
+                )
+            }
+        } else if (data.data.toInt() > 50) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 com.app.smartriumclock.notification.NotificationManager.sendNotification(
                     this,
@@ -247,22 +278,6 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
                 sendNotificationUnder(
                     getString(R.string.notification_channel_dust_title),
                     getString(R.string.notification_channel_dust_description)
-                )
-            }
-        } else {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                com.app.smartriumclock.notification.NotificationManager.sendNotification(
-                    this,
-                    1,
-                    com.app.smartriumclock.notification.NotificationManager.Channel.MESSAGE,
-                    getString(R.string.notification_channel_dust_title_good),
-                    getString(R.string.notification_channel_dust_description_good)
-                )
-                nowTime()?.let { it1 -> nav_item.add("$it1- 미세먼지 좋음") }
-            } else {
-                sendNotificationUnder(
-                    getString(R.string.notification_channel_dust_title_good),
-                    getString(R.string.notification_channel_dust_description_good)
                 )
             }
         }
@@ -271,62 +286,80 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
     private fun setTopPM2_5(data: BleReceive) {
         ultra_dust_num.text = data.data.toInt().toString()
-        if (data.data.toInt() > 70) {
+
+        if (data.data.toInt() < 50) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 com.app.smartriumclock.notification.NotificationManager.sendNotification(
                     this,
                     1,
                     com.app.smartriumclock.notification.NotificationManager.Channel.COMMENT,
-                    getString(R.string.notification_channel_ultra_dust_title),
-                    getString(R.string.notification_channel_ultra_dust_description)
+                    getString(R.string.notification_channel_ultra_dust_title_good),
+                    getString(R.string.notification_channel_ultra_dust_description_good)
                 )
-                nowTime()?.let { it1 -> nav_item.add("$it1- 미세먼지 나쁨") }
+                nowTime()?.let { it1 -> nav_item.add("$it1- 초미세먼지 좋음") }
             } else {
                 sendNotificationUnder(
-                    getString(R.string.notification_channel_ultra_dust_title),
-                    getString(R.string.notification_channel_ultra_dust_description)
+                    getString(R.string.notification_channel_ultra_dust_title_good),
+                    getString(R.string.notification_channel_ultra_dust_description_good)
                 )
             }
-        } else {
+        } else if (data.data.toInt() > 70) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 com.app.smartriumclock.notification.NotificationManager.sendNotification(
                     this,
                     1,
                     com.app.smartriumclock.notification.NotificationManager.Channel.COMMENT,
-                    getString(R.string.notification_channel_ultra_dust_title_good),
-                    getString(R.string.notification_channel_ultra_dust_description_good)
+                    getString(R.string.notification_channel_ultra_dust_title),
+                    getString(R.string.notification_channel_ultra_dust_description)
                 )
-                nowTime()?.let { it1 -> nav_item.add("$it1- 미세먼지 좋음") }
+                nowTime()?.let { it1 -> nav_item.add("$it1- 초미세먼지 나쁨") }
             } else {
                 sendNotificationUnder(
-                    getString(R.string.notification_channel_ultra_dust_title_good),
-                    getString(R.string.notification_channel_ultra_dust_description_good)
+                    getString(R.string.notification_channel_ultra_dust_title),
+                    getString(R.string.notification_channel_ultra_dust_description)
                 )
             }
         }
-        //recycler_drawer_list.adapter?.notifyDataSetChanged()
+        recycler_drawer_list.adapter?.notifyDataSetChanged()
     }
 
     private fun setTopPM1(data: BleReceive) {
         super_ultra_dust_num.text = data.data.toInt().toString()
-        if (data.data.toInt() > 50) {
+
+        if (data.data.toInt() < 70) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 com.app.smartriumclock.notification.NotificationManager.sendNotification(
                     this,
                     1,
                     com.app.smartriumclock.notification.NotificationManager.Channel.MESSAGE,
-                    getString(R.string.notification_channel_dust_title),
-                    getString(R.string.notification_channel_dust_description)
+                    getString(R.string.notification_channel_super_ultra_dust_title_good),
+                    getString(R.string.notification_channel_super_ultra_dust_description_good)
                 )
-                nowTime()?.let { it1 -> nav_item.add("$it1- 미세먼지 나쁨") }
+                nowTime()?.let { it1 -> nav_item.add("$it1- 극초미세먼지 좋음") }
             } else {
                 sendNotificationUnder(
-                    getString(R.string.notification_channel_dust_title),
-                    getString(R.string.notification_channel_dust_description)
+                    getString(R.string.notification_channel_super_ultra_dust_title_good),
+                    getString(R.string.notification_channel_super_ultra_dust_description_good)
+                )
+            }
+        } else if (data.data.toInt() > 80) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                com.app.smartriumclock.notification.NotificationManager.sendNotification(
+                    this,
+                    1,
+                    com.app.smartriumclock.notification.NotificationManager.Channel.MESSAGE,
+                    getString(R.string.notification_channel_super_ultra_dust_title),
+                    getString(R.string.notification_channel_super_ultra_dust_description)
+                )
+                nowTime()?.let { it1 -> nav_item.add("$it1- 극초미세먼지 나쁨") }
+            } else {
+                sendNotificationUnder(
+                    getString(R.string.notification_channel_super_ultra_dust_title),
+                    getString(R.string.notification_channel_super_ultra_dust_description)
                 )
             }
         }
-        //recycler_drawer_list.adapter?.notifyDataSetChanged()
+        recycler_drawer_list.adapter?.notifyDataSetChanged()
     }
 
     @SuppressLint("WrongConstant")
@@ -471,7 +504,7 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         // 현재시간을 date 변수에 저장한다.
         var date = Date(now)
         // 시간을 나타냇 포맷을 정한다 ( yyyy/MM/dd 같은 형태로 변형 가능 )
-        var simpleDataFormat = SimpleDateFormat("yyyyMMdd")
+        var simpleDataFormat = SimpleDateFormat("MM.dd")
         // nowDate 변수에 값을 저장한다.
         var formatDate = simpleDataFormat.format(date)
         Log.d("TEST", "Result format : $formatDate")
