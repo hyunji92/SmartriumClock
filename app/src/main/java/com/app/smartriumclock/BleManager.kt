@@ -112,12 +112,14 @@ class BleManager {
         disconnectGattServer()
 
         // check ble adapter and ble enabled
-        if (!bleAdapter.isEnabled) {
-            requestEnableBLE()
+        if (bleAdapter!= null) {
+            if (!bleAdapter.isEnabled) {
+                requestEnableBLE()
 
-            // 블루 투스 연결기계 찾을 수 가 없
-            Log.d(TAG, "Scanning Failed: ble not enabled")
-            return
+                // 블루 투스 연결기계 찾을 수 가 없
+                Log.d(TAG, "Scanning Failed: ble not enabled")
+                return
+            }
         }
 
         // 블루투스 스캔 필터

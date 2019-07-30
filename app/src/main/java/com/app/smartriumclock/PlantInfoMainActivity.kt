@@ -1,21 +1,35 @@
 package com.app.smartriumclock
 
+import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import android.content.res.Configuration
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import androidx.core.view.GravityCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.app.smartriumclock.model.BleReceive
-import com.app.smartriumclock.setting.MyPageActivity
 import com.app.smartriumclock.setting.SettingActivity
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
@@ -26,9 +40,11 @@ import kotlinx.android.synthetic.main.activity_plant_info_main.mypage_btn
 import kotlinx.android.synthetic.main.activity_plant_info_main.toolbar
 
 import kotlinx.android.synthetic.main.activity_plant_main.*
+import kotlinx.android.synthetic.main.activity_plant_main.dl_main_drawer_root
+import kotlinx.android.synthetic.main.activity_plant_main.nv_main_navigation_root
 import java.text.SimpleDateFormat
 import java.util.*
-
+import java.util.concurrent.TimeUnit
 
 
 class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -40,30 +56,34 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
     val timer by lazy { Timer() }
 
     val compositeDisposable = CompositeDisposable()
+    //Data
+    var nav_item =  ArrayList<String>()
 
     lateinit var drawerToggle: ActionBarDrawerToggle
-    lateinit var drawerToggle2: ActionBarDrawerToggle
 
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_all -> {
                 setAll()
+                topNum()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_temperature -> {
                 setTemperatureChart()
+                topNum()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_huminity -> {
                 setHumidityChart()
+                topNum()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_illu -> {
                 setIlluminanceChart()
+                topNum()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_setting -> {
-
                 val intent = Intent(this, SettingActivity::class.java)
                 intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP and Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 startActivity(intent)
@@ -85,20 +105,16 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
     override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
         drawerToggle.syncState()
-        drawerToggle2.syncState()
 
     }
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         drawerToggle.onConfigurationChanged(newConfig)
-        drawerToggle2.onConfigurationChanged(newConfig)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (drawerToggle.onOptionsItemSelected(item)) {
-            return true
-        } else if (drawerToggle2.onOptionsItemSelected(item)) {
             return true
         }
         return super.onOptionsItemSelected(item)
@@ -124,18 +140,9 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         dl_main_drawer_root.addDrawerListener(drawerToggle)
         nv_main_navigation_root.setNavigationItemSelectedListener(this)
 
-        drawerToggle2 = ActionBarDrawerToggle(
-            this,
-            dl_main_drawer_root,
-            toolbar,
-            R.string.drawer_open,
-            R.string.drawer_close
-        )
-        dl_main_drawer_root.addDrawerListener(drawerToggle2)
-        navigation_view_second.setNavigationItemSelectedListener(this)
 
         mypage_btn.setOnClickListener {
-            val intent = Intent(this, MyPageActivity::class.java)
+            val intent = Intent(this, DustMainActivity::class.java)
             intent.addFlags(FLAG_ACTIVITY_SINGLE_TOP and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         }
@@ -154,9 +161,12 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
                     data
                 )
             )
-
-
             Log.d("PlantInfoMainActivity", "Command : ${command}, Date : ${date}, Data : ${data}")
+            if (data.toInt() > 40) {
+                nav_item.add("$date : 미세먼지 나쁨 ")
+            } else {
+                nav_item.add("$date : 미세먼지 좋음 ")
+            }
         }
 
 
@@ -169,48 +179,37 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         BleManager.instance.writeQueue(BleManager.Command.Illuminance, Date())
         BleManager.instance.writeQueue(BleManager.Command.Temperature, Date())
 
+        setAll()
         startPeriod()
 
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllTemperature()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    temper_num.text = it.last().data.toFloat().toString()
+        val listAdapter = ListAdapter(this, nav_item)
+        var layoutManager = LinearLayoutManager(this)
+        recycler_drawer_list_plant.apply {
+            setLayoutManager(layoutManager)
+            adapter = listAdapter
+        }
 
-                },
-                {
-                    it.printStackTrace()
-                }
-            )
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllHumidity()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    humidity_num.text = it.last().data.toFloat().toString()
-                },
-                {
-                    it.printStackTrace()
-                }
-            )
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllIlluminance()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    illu_num.text = it.last().data.toFloat().toString()
-                },
-                {
-                    it.printStackTrace()
-                }
-            )
+
+        topNum()
 
         val left = plant_chart.axisLeft
         val right = plant_chart.axisRight
+
+
+        val xAxis = plant_chart.xAxis // x 축 설정
+        xAxis.apply {
+            position = XAxis.XAxisPosition.BOTTOM
+            valueFormatter = object : ValueFormatter() {
+
+                private val mFormat = SimpleDateFormat("HH:mm", Locale.KOREA)
+
+                override fun getFormattedValue(value: Float): String {
+
+                    val millis = TimeUnit.HOURS.toMillis(value.toLong())
+                    return mFormat.format(Date(millis))
+                }
+            }
+        }
         left.apply {
             setDrawLabels(true) // no axis labels
             setDrawAxisLine(false) // no axis line
@@ -231,6 +230,79 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         }
 
         LineChartDummyData()
+    }
+
+    fun topNum(){
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllTemperature()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    temper_num.text = it[it.count()-1].data.toInt().toString()
+                    if (it[it.count()-1].data.toInt() > 50) {
+//
+                    }
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllHumidity()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    humidity_num.text = it[it.count()-1].data.toInt().toString()
+                    if (it[it.count()-1].data.toInt() > 70) {
+
+                    }
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+        MainApplication.database
+            .bleReceiveDao()
+            .getAllIlluminance()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    illu_num.text = it[it.count()-1].data.toInt().toString()
+                    if (it[it.count()-1].data.toInt() > 50) {
+
+                    }
+
+                },
+                {
+                    it.printStackTrace()
+                }
+            )
+    }
+
+    @SuppressLint("WrongConstant")
+    fun sendNotificationUnder(status: String, message: String) {
+        val res = resources
+        val notificationIntent = Intent(this, DustMainActivity::class.java)
+        notificationIntent.putExtra("notificationId", 9999) //전달할 값
+        val contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val builder = NotificationCompat.Builder(this)
+        builder.setContentTitle(status)
+            .setContentText(message)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setLargeIcon(BitmapFactory.decodeResource(res, R.mipmap.ic_launcher))
+            .setContentIntent(contentIntent)
+            .setAutoCancel(true)
+            .setWhen(System.currentTimeMillis())
+            .setDefaults(Notification.DEFAULT_ALL)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            builder.setCategory(Notification.CATEGORY_MESSAGE)
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+        }
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(1234, builder.build())
     }
 
     fun LineChartDummyData() {
@@ -522,5 +594,29 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         super.onDestroy()
         stopPeriod()
         compositeDisposable.dispose()
+    }
+
+    private class ListAdapter(context:Context, data:List<String>): RecyclerView.Adapter<ListAdapter.myViewHolder>() {
+
+        internal var context:Context
+        internal var mData:List<String>
+
+        init{
+            this.context = context
+            this.mData = data
+        }
+
+        override fun getItemCount(): Int = mData.size
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType:Int):ListAdapter.myViewHolder {
+            val view = LayoutInflater.from(context).inflate(R.layout.notification_list_item, parent, false)
+            return myViewHolder(view)
+        }
+        override fun onBindViewHolder(holder:ListAdapter.myViewHolder, position:Int) {
+            holder.nav.text = mData[position]
+        }
+        inner class myViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
+            internal var nav: TextView = itemView.findViewById(R.id.nav) as TextView
+        }
     }
 }

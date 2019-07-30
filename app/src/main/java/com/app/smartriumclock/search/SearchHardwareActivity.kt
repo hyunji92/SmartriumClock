@@ -3,6 +3,7 @@ package com.app.smartriumclock.search
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -52,6 +53,14 @@ class SearchHardwareActivity : AppCompatActivity() {
 
         // 스캔 시작
         BleManager.instance.startScan()
+
+        go_website.setOnClickListener {
+            intent = Intent(Intent.ACTION_VIEW)
+            var uri = Uri.parse("http://www.it-sago.com")
+            intent.data = uri
+            startActivity(intent)
+
+        }
 
     }
 

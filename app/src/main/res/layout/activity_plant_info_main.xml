@@ -42,11 +42,11 @@
 
             <ImageView
                     android:id="@+id/mypage_btn"
-                    android:layout_width="32dp"
-                    android:layout_height="36dp"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:background="@drawable/smart_clock_icon"/>
+                    android:background="@drawable/white_dust_main_icon"/>
 
         </RelativeLayout>
 
@@ -134,7 +134,7 @@
                             android:layout_gravity="center"
                             android:background="@drawable/hexagon_1"
                             android:gravity="center"
-                            android:text="15"
+                            android:text="35"
                             android:textColor="@color/white"
                             android:textSize="20dp"
                             android:textStyle="bold"/>
@@ -161,7 +161,7 @@
                             android:layout_gravity="center"
                             android:background="@drawable/hexagon_3"
                             android:gravity="center"
-                            android:text="125"
+                            android:text="25"
                             android:textColor="@color/white"
                             android:textSize="20dp"
                             android:textStyle="bold"/>

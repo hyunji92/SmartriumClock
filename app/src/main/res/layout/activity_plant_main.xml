@@ -21,24 +21,30 @@
 			layout="@layout/activity_plant_info_main"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent" />
-		
-		<!-- navigation drawer-->
-		<com.google.android.material.navigation.NavigationView
-			android:id="@+id/nv_main_navigation_root"
-			app:menu="@menu/navigation_drawer"
-			android:layout_width="wrap_content"
-			android:layout_height="match_parent"
-			android:layout_gravity="start"
-			android:fitsSystemWindows="true" />
 
-		<!-- Second navigation drawer -->
 		<com.google.android.material.navigation.NavigationView
-				android:id="@+id/navigation_view_second"
-				app:menu="@menu/navigation_drawer"
+				android:id="@+id/nv_main_navigation_root"
 				android:layout_width="wrap_content"
 				android:layout_height="match_parent"
-				android:layout_gravity="end"
-				android:fitsSystemWindows="true"/>
+				android:layout_gravity="start"
+				android:fitsSystemWindows="true">
+
+			<RelativeLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content">
+
+				<include
+						android:id="@+id/header"
+						layout="@layout/header" />
+
+				<androidx.recyclerview.widget.RecyclerView
+						android:id="@+id/recycler_drawer_list_plant"
+						android:layout_width="280dp"
+						android:layout_height="wrap_content"
+						android:layout_below="@id/header"/>
+			</RelativeLayout>
+
+		</com.google.android.material.navigation.NavigationView>
 	
 	</androidx.drawerlayout.widget.DrawerLayout>
 

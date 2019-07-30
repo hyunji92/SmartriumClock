@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
-import com.app.smartriumclock.DustMainActivity
 import com.app.smartriumclock.R
 import com.app.smartriumclock.search.SearchHardwareActivity
 
@@ -35,16 +34,14 @@ class SplashActivity : AppCompatActivity() {
             editor.putBoolean("first_user", true)
             editor.commit()
         } else {
-            val intent = Intent(this, DustMainActivity::class.java)
+            val intent = Intent(this, SearchHardwareActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK and Intent.FLAG_ACTIVITY_CLEAR_TASK and Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
 
             this.finish()
         }
+
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-    }
 }
 

@@ -12,16 +12,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center|center_horizontal"
-            tools:background="@drawable/tutorial_0"/>
+            tools:background="@drawable/tutorial_0"
+            android:layout_marginBottom="60dp"
+    />
 
     <ImageView
-            android:id="@+id/out_tutorial"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:id="@+id/tutorial_to_main"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_gravity="center"
+            android:visibility="visible"
             android:background="@drawable/next_btn_yellow"
-            android:layout_marginTop="50dp"
-            android:layout_gravity="bottom|center"
-            android:visibility="gone"/>
-
-
+            android:layout_marginBottom="60dp"/>
 </LinearLayout>

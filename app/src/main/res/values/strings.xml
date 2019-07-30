@@ -12,6 +12,16 @@
     <string name="dust">미세</string>
     <string name="ultra_dust">초미세</string>
     <string name="super_ultra_dust">극초미세</string>
-    <string name="setting">설정</string>
+    <string name="setting">관리</string>
     <string name="channel_id">smart_rium</string>
+    <string name="notification_channel_dust_title">미세 먼지 나쁨!</string>
+    <string name="notification_channel_dust_description">식물을 케어해 주세요!</string>
+    <string name="notification_channel_ultra_dust_title">초미세 먼지 나쁨</string>
+    <string name="notification_channel_ultra_dust_description">식물을 케어해주세요!</string>
+
+
+    <string name="notification_channel_dust_title_good">미세 먼지 좋음!</string>
+    <string name="notification_channel_dust_description_good">미세먼지가 좋아지고 있어요!</string>
+    <string name="notification_channel_ultra_dust_title_good">초미세 먼지 좋음!</string>
+    <string name="notification_channel_ultra_dust_description_good">초미세먼지가 좋아지고 있어요!</string>
 </resources>
