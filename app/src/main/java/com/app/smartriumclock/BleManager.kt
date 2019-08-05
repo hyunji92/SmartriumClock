@@ -269,7 +269,7 @@ class BleManager {
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             super.onServicesDiscovered(gatt, status)
-            Log.d(TAG, "Discover Service status : ${status}")
+            //Log.d(TAG, "Discover Service status : ${status}")
 
             // Temporary
             val service = gatt.getService(UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb"))
@@ -284,7 +284,7 @@ class BleManager {
             descriptor?.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             bleGatt?.writeDescriptor(descriptor)
 
-            Log.d(TAG, "setResultNotification : ${setResultNotification}")
+            //Log.d(TAG, "setResultNotification : ${setResultNotification}")
         }
 
         /**

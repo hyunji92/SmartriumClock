@@ -11,7 +11,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -33,7 +32,9 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_dust_main.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.text.SimpleDateFormat
@@ -51,12 +52,33 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     val timer by lazy { Timer() }
     //Data
     var nav_item = ArrayList<String>()
-    //val compositeDisposable = CompositeDisposable()
 
     // Data Sets
     private val pm10DataSet by lazy { generateLineDataSet("미세", "#B0C17E") }
     private val pm2_5DataSet by lazy { generateLineDataSet("초미세", "#86A83E") }
     private val pm1DataSet by lazy { generateLineDataSet("극초미세", "#122716") }
+
+    // Data Group
+    // daily, weekly, monthly, yearly
+    private var group = "daily"
+        set(value) {
+            field = value
+
+            // Dispose Already Observed DataSource
+            bleReceiveDisposable.dispose()
+
+            // Initialize New Disposable
+            bleReceiveDisposable = CompositeDisposable()
+
+            // Observe New DataSource
+            setAll()
+        }
+
+    // Composite Disposable
+    private var bleReceiveDisposable = CompositeDisposable()
+
+    // Labels
+    private var xLabels = arrayListOf<Long>()
 
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
@@ -89,13 +111,16 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
     private fun generateLineDataSet(label: String, hex: String): LineDataSet {
         return LineDataSet(listOf(), label).apply {
             color = ColorTemplate.rgb(hex)
-            setDrawCircles(false)
             setDrawValues(false)
             mode = LineDataSet.Mode.CUBIC_BEZIER
             fillAlpha = 65
             fillColor = ColorTemplate.getHoloBlue()
             highLightColor = Color.rgb(176, 193, 126)
-            setDrawCircleHole(false)
+
+            // 한개 짜리 데이터가 보이지 않아서 활성화
+            setDrawCircles(true)
+            setDrawCircleHole(true)
+            circleColors = listOf(Color.BLACK)
 
             // Drawable
             setDrawFilled(true)
@@ -172,17 +197,23 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
                     data
                 )
             )
-            Log.d("DustMainActivity", "Command : ${command}, Date : ${date}, Data : ${data}")
         }
 
-        // 요청
+        // 현재 베터리 요청
         BleManager.instance.writeQueue(BleManager.Command.Battery, Date())
-        BleManager.instance.writeQueue(BleManager.Command.Humidity, Date())
-        BleManager.instance.writeQueue(BleManager.Command.PM1, Date())
-        BleManager.instance.writeQueue(BleManager.Command.PM10, Date())
-        BleManager.instance.writeQueue(BleManager.Command.PM2_5, Date())
-        BleManager.instance.writeQueue(BleManager.Command.Illuminance, Date())
-        BleManager.instance.writeQueue(BleManager.Command.Temperature, Date())
+
+        // 과거 데이터 부터 현재 시간의 데이터 까지 요청
+        for (i in 0..Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+            val date = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, i)
+            }.time
+            BleManager.instance.writeQueue(BleManager.Command.Humidity, date)
+            BleManager.instance.writeQueue(BleManager.Command.PM1, date)
+            BleManager.instance.writeQueue(BleManager.Command.PM10, date)
+            BleManager.instance.writeQueue(BleManager.Command.PM2_5, date)
+            BleManager.instance.writeQueue(BleManager.Command.Illuminance, date)
+            BleManager.instance.writeQueue(BleManager.Command.Temperature, date)
+        }
 
         setAll()
         startPeriod()
@@ -194,27 +225,42 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
             adapter = listAdapter
         }
 
-        setGraph("HH:mm")
+        // 기본 데이터 설정
+        setGraph("HH:00")
 
+
+        // 일별
         day.setOnClickListener {
-            setGraph("HH:mm")
+            setGraph("HH:00")
+
+            group = "daily"
         }
+
+        // 주별
         week.setOnClickListener {
             setGraph("MM월 W주")
+
+            group = "weekly"
         }
 
+        // 웗별
         month.setOnClickListener {
             setGraph("MM월")
+
+            group = "monthly"
         }
 
+        // 년별
         year.setOnClickListener {
             setGraph("yyyy년")
-        }
 
+            group = "yearly"
+        }
     }
 
-    private fun setGraph(pattern: String) {
 
+    //https://devming.tistory.com/217
+    private fun setGraph(pattern: String) {
         val left = dust_chart.axisLeft
         val xAxis = dust_chart.xAxis // x 축 설정
         xAxis.apply {
@@ -223,9 +269,12 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
 
                 private val mFormat = SimpleDateFormat(pattern, Locale.KOREA)
                 override fun getFormattedValue(value: Float): String {
-                    //  val millis = TimeUnit.HOURS.toMillis(value.toLong())
-                    //  eturn mFormat.format(Date(millis))
-                    return mFormat.format(Date(value.toLong()))
+                    try {
+                        val time = xLabels[value.toInt()]
+                        return mFormat.format(Date(time))
+                    } catch (e: Exception) {
+                        return ""
+                    }
                 }
             }
         }
@@ -415,86 +464,113 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         dust_chart.invalidate()
     }
 
-    @SuppressLint("CheckResult")
-    fun setAll() {
+    private fun getDataSource(command: String, group: String): Observable<List<BleReceive>> {
+        val dao = MainApplication.database.bleReceiveDao()
+        return when (group) {
+            "daily" -> {
+                val startedAt = Calendar.getInstance().apply {
+                    set(Calendar.HOUR, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val endedAt = Calendar.getInstance().apply {
+                    timeInMillis = startedAt.timeInMillis
+                    add(Calendar.DATE, 1)// 하루 추가
+                }
+                dao.getToday(command, startedAt.timeInMillis, endedAt.timeInMillis)
+            }
+            "weekly" -> dao.getWeekly(command)
+            "monthly" -> dao.getMonthly(command)
+            "yearly" -> dao.getYearly(command)
+            else -> dao.getAll(command)
+        }
+    }
+
+    private fun setAll() {
 
         // 데이터셋 최초에 설정
         dust_chart.data = LineData(listOf(pm10DataSet, pm2_5DataSet, pm1DataSet))
 
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllPM10()
+        // Command Set
+        val disposables =
+            mapOf(Pair("01", pm10DataSet), Pair("02", pm2_5DataSet), Pair("03", pm1DataSet)).map { commandSet ->
+                getDataSource(commandSet.key, this.group)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        {
+                            // 데이터
+                            commandSet.value.values =
+                                it.mapIndexed { index, bleReceive ->
+                                    //                                    Log.d(
+//                                        "DustMain",
+//                                        "Index : ${index.toFloat()}, value : ${bleReceive.data.toFloat()}"
+//                                    )
+                                    Entry(index.toFloat(), bleReceive.data.toFloat())
+                                }
+
+                            // Labels
+                            it.mapIndexed { index, bleReceive ->
+                                //                                Log.d("DustMainXAxis", "Time : ${bleReceive.date.toLong()}")
+                                xLabels.add(index, bleReceive.date.toLong())
+                            }
+
+                            // Status
+//                            Log.d("DustMain", "Result : (${commandSet.key}, ${commandSet.value.values.toString()}})")
+
+                            // Update XAxis Label Count
+                            updateXAxisLabelCount()
+
+                            dust_chart.data.notifyDataChanged()
+                            dust_chart.notifyDataSetChanged()
+                            dust_chart.invalidate()
+                        },
+                        {
+                            it.printStackTrace()
+                        }
+                    )
+            }
+
+        disposables.forEach { bleReceiveDisposable.add(it) }
+
+        // 최신 데이터요청
+        MainApplication.database.bleReceiveDao().getRecent(BleManager.Command.PM10.value)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    pm10DataSet.values =
-                        it.mapIndexed { index, bleReceive ->
-                            Entry(
-                                bleReceive.date.toFloat(),
-                                bleReceive.data.toFloat()
-                            )
-                        }
-                    dust_chart.data.notifyDataChanged()
-                    dust_chart.notifyDataSetChanged()
-                    dust_chart.invalidate()
-
-                    // Set Top PM10
                     it.firstOrNull { receive -> receive.data.toLong() > 0 }?.run { setTopPM10(this) }
                 },
-                {
-                    it.printStackTrace()
-                }
-            )
+                {}
+            ).apply { bleReceiveDisposable.add(this) }
 
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllPM2_5()
+        MainApplication.database.bleReceiveDao().getRecent(BleManager.Command.PM2_5.value)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    pm2_5DataSet.values =
-                        it.mapIndexed { index, bleReceive ->
-                            Entry(
-                                bleReceive.date.toFloat(),
-                                bleReceive.data.toFloat()
-                            )
-                        }
-                    dust_chart.data.notifyDataChanged()
-                    dust_chart.notifyDataSetChanged()
-                    dust_chart.invalidate()
-
-                    // Set Top PM2.5
                     it.firstOrNull { receive -> receive.data.toLong() > 0 }?.run { setTopPM2_5(this) }
                 },
-                {
-                    it.printStackTrace()
-                }
-            )
+                {}
+            ).apply { bleReceiveDisposable.add(this) }
 
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllPM1()
+        MainApplication.database.bleReceiveDao().getRecent(BleManager.Command.PM1.value)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    pm1DataSet.values =
-                        it.mapIndexed { index, bleReceive ->
-                            Entry(
-                                bleReceive.date.toFloat(),
-                                bleReceive.data.toFloat()
-                            )
-                        }
-                    dust_chart.data.notifyDataChanged()
-                    dust_chart.notifyDataSetChanged()
-                    dust_chart.invalidate()
-
-                    // Set Top PM1
                     it.firstOrNull { receive -> receive.data.toLong() > 0 }?.run { setTopPM1(this) }
                 },
-                {
-                    it.printStackTrace()
-                }
-            )
+                {}
+            ).apply { bleReceiveDisposable.add(this) }
+    }
+
+    private fun updateXAxisLabelCount() {
+        val count = maxOf(
+            pm10DataSet.entryCount,
+            pm2_5DataSet.entryCount,
+            pm1DataSet.entryCount
+        )
+        // Log.d("DustMainXAxis", "Count ( ${count}, true ) ")
+        dust_chart.xAxis.setLabelCount(count, true)
+        dust_chart.invalidate()
     }
 
     fun nowTime(): String? {
@@ -507,7 +583,7 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         var simpleDataFormat = SimpleDateFormat("MM.dd")
         // nowDate 변수에 값을 저장한다.
         var formatDate = simpleDataFormat.format(date)
-        Log.d("TEST", "Result format : $formatDate")
+        // Log.d("TEST", "Result format : $formatDate")
 
         return formatDate
     }
@@ -530,7 +606,7 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
                             data
                         )
                     )
-                    Log.d("DustMainActivity", "Command : ${command}, Date : ${date}, Data : ${data}")
+                    // Log.d("DustMainActivity", "Command : ${command}, Date : ${date}, Data : ${data}")
                 }
                 //주기적으로 실행할 작업 추가
                 BleManager.instance.writeQueue(BleManager.Command.Battery, Date())
@@ -584,3 +660,4 @@ class DustMainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSel
         }
     }
 }
+

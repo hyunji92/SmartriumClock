@@ -34,6 +34,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_plant_info_main.*
@@ -60,6 +61,28 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
     private val temperatureDataSet by lazy { generateLineDataSet("온도", "#B0C17E") }
     private val humidityDataSet by lazy { generateLineDataSet("습도", "#86A83E") }
     private val illuminanceDataSet by lazy { generateLineDataSet("조도", "#122716") }
+
+    // Data Group
+    // daily, weekly, monthly, yearly
+    private var group = "daily"
+        set(value) {
+            field = value
+
+            // Dispose Already Observed DataSource
+            bleReceiveDisposable.dispose()
+
+            // Initialize New Disposable
+            bleReceiveDisposable = CompositeDisposable()
+
+            // Observe New DataSource
+            setAll()
+        }
+
+    // Composite Disposable
+    private var bleReceiveDisposable = CompositeDisposable()
+
+    // Labels
+    private var xLabels = arrayListOf<Long>()
 
 
     private val onNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
@@ -94,13 +117,16 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
     private fun generateLineDataSet(label: String, hex: String): LineDataSet {
         return LineDataSet(listOf(), label).apply {
             color = ColorTemplate.rgb(hex)
-            setDrawCircles(false)
             setDrawValues(false)
             mode = LineDataSet.Mode.CUBIC_BEZIER
             fillAlpha = 65
             fillColor = ColorTemplate.getHoloBlue()
             highLightColor = Color.rgb(176, 193, 126)
-            setDrawCircleHole(false)
+
+            // 한개 짜리 데이터가 보이지 않아서 활성화
+            setDrawCircles(true)
+            setDrawCircleHole(true)
+            circleColors = listOf(Color.BLACK)
 
             // Drawable
             setDrawFilled(true)
@@ -176,18 +202,23 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
                     data
                 )
             )
-            Log.d("PlantInfoMainActivity", "Command : ${command}, Date : ${date}, Data : ${data}")
         }
 
-
-        // 요청
+        // 현재 베터리 요청
         BleManager.instance.writeQueue(BleManager.Command.Battery, Date())
-        BleManager.instance.writeQueue(BleManager.Command.Humidity, Date())
-        BleManager.instance.writeQueue(BleManager.Command.PM1, Date())
-        BleManager.instance.writeQueue(BleManager.Command.PM10, Date())
-        BleManager.instance.writeQueue(BleManager.Command.PM2_5, Date())
-        BleManager.instance.writeQueue(BleManager.Command.Illuminance, Date())
-        BleManager.instance.writeQueue(BleManager.Command.Temperature, Date())
+
+        // 과거 데이터 부터 현재 시간의 데이터 까지 요청
+        for (i in 0..Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+            val date = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, i)
+            }.time
+            BleManager.instance.writeQueue(BleManager.Command.Humidity, date)
+            BleManager.instance.writeQueue(BleManager.Command.PM1, date)
+            BleManager.instance.writeQueue(BleManager.Command.PM10, date)
+            BleManager.instance.writeQueue(BleManager.Command.PM2_5, date)
+            BleManager.instance.writeQueue(BleManager.Command.Illuminance, date)
+            BleManager.instance.writeQueue(BleManager.Command.Temperature, date)
+        }
 
         setAll()
         startPeriod()
@@ -200,27 +231,42 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         }
 
 
-        setGraph("HH:mm")
 
+        // 기본 데이터 설정
+        setGraph("HH:00")
+
+
+        // 일별
         day.setOnClickListener {
-            setGraph("HH:mm")
+            setGraph("HH:00")
+
+            group = "daily"
         }
+
+        // 주별
         week.setOnClickListener {
             setGraph("MM월 W주")
+
+            group = "weekly"
         }
 
+        // 웗별
         month.setOnClickListener {
             setGraph("MM월")
+
+            group = "monthly"
         }
 
+        // 년별
         year.setOnClickListener {
             setGraph("yyyy년")
+
+            group = "yearly"
         }
 
     }
 
     private fun setGraph(pattern: String) {
-
         val left = plant_chart.axisLeft
         val xAxis = plant_chart.xAxis // x 축 설정
         xAxis.apply {
@@ -229,9 +275,12 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
 
                 private val mFormat = SimpleDateFormat(pattern, Locale.KOREA)
                 override fun getFormattedValue(value: Float): String {
-                    //  val millis = TimeUnit.HOURS.toMillis(value.toLong())
-                    //  eturn mFormat.format(Date(millis))
-                    return mFormat.format(Date(value.toLong()))
+                    try {
+                        val time = xLabels[value.toInt()]
+                        return mFormat.format(Date(time))
+                    } catch (e: Exception) {
+                        return ""
+                    }
                 }
             }
         }
@@ -283,85 +332,113 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
 
     @SuppressLint("CheckResult")
     fun setAll() {
+
         // 데이터셋 최초에 설정
         plant_chart.data = LineData(listOf(temperatureDataSet, humidityDataSet, illuminanceDataSet))
 
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllTemperature()
+        // Command Set
+        val disposables =
+            mapOf(Pair("04", temperatureDataSet), Pair("05", humidityDataSet), Pair("06", illuminanceDataSet)).map { commandSet ->
+                getDataSource(commandSet.key, this.group)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        {
+                            // 데이터
+                            commandSet.value.values =
+                                it.mapIndexed { index, bleReceive ->
+                                    //                                    Log.d(
+//                                        "DustMain",
+//                                        "Index : ${index.toFloat()}, value : ${bleReceive.data.toFloat()}"
+//                                    )
+                                    Entry(index.toFloat(), bleReceive.data.toFloat())
+                                }
+
+                            // Labels
+                            it.mapIndexed { index, bleReceive ->
+                                //                                Log.d("DustMainXAxis", "Time : ${bleReceive.date.toLong()}")
+                                xLabels.add(index, bleReceive.date.toLong())
+                            }
+
+                            // Status
+//                            Log.d("DustMain", "Result : (${commandSet.key}, ${commandSet.value.values.toString()}})")
+
+                            // Update XAxis Label Count
+                            updateXAxisLabelCount()
+
+                            plant_chart.data.notifyDataChanged()
+                            plant_chart.notifyDataSetChanged()
+                            plant_chart.invalidate()
+                        },
+                        {
+                            it.printStackTrace()
+                        }
+                    )
+            }
+
+        disposables.forEach { bleReceiveDisposable.add(it) }
+
+        // 최신 데이터요청
+        MainApplication.database.bleReceiveDao().getRecent(BleManager.Command.Temperature.value)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    temperatureDataSet.values =
-                        it.mapIndexed { index, bleReceive ->
-                            Entry(
-                                bleReceive.date.toFloat(),
-                                bleReceive.data.toFloat()
-                            )
-                        }
-                    plant_chart.data.notifyDataChanged()
-                    plant_chart.notifyDataSetChanged()
-                    plant_chart.invalidate()
-
-                    // Set Top PM10
                     it.firstOrNull { receive -> receive.data.toLong() > 0 }?.run { setTemperature(this) }
                 },
-                {
-                    it.printStackTrace()
-                }
-            )
+                {}
+            ).apply { bleReceiveDisposable.add(this) }
 
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllHumidity()
+        MainApplication.database.bleReceiveDao().getRecent(BleManager.Command.Humidity.value)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    humidityDataSet.values =
-                        it.mapIndexed { index, bleReceive ->
-                            Entry(
-                                bleReceive.date.toFloat(),
-                                bleReceive.data.toFloat()
-                            )
-                        }
-                    plant_chart.data.notifyDataChanged()
-                    plant_chart.notifyDataSetChanged()
-                    plant_chart.invalidate()
-
-                    // Set Top PM2.5
                     it.firstOrNull { receive -> receive.data.toLong() > 0 }?.run { setHumidity(this) }
                 },
-                {
-                    it.printStackTrace()
-                }
-            )
+                {}
+            ).apply { bleReceiveDisposable.add(this) }
 
-        MainApplication.database
-            .bleReceiveDao()
-            .getAllIlluminance()
+        MainApplication.database.bleReceiveDao().getRecent(BleManager.Command.Illuminance.value)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    illuminanceDataSet.values =
-                        it.mapIndexed { index, bleReceive ->
-                            Entry(
-                                bleReceive.date.toFloat(),
-                                bleReceive.data.toFloat()
-                            )
-                        }
-                    plant_chart.data.notifyDataChanged()
-                    plant_chart.notifyDataSetChanged()
-                    plant_chart.invalidate()
-
-                    // Set Top PM1
                     it.firstOrNull { receive -> receive.data.toLong() > 0 }?.run { setIlluminance(this) }
                 },
-                {
-                    it.printStackTrace()
-                }
-            )
+                {}
+            ).apply { bleReceiveDisposable.add(this) }
     }
 
+    private fun updateXAxisLabelCount() {
+        val count = maxOf(
+            temperatureDataSet.entryCount,
+            humidityDataSet.entryCount,
+            illuminanceDataSet.entryCount
+        )
+        // Log.d("DustMainXAxis", "Count ( ${count}, true ) ")
+        plant_chart.xAxis.setLabelCount(count, true)
+        plant_chart.invalidate()
+    }
+
+    private fun getDataSource(command: String, group: String): Observable<List<BleReceive>> {
+        val dao = MainApplication.database.bleReceiveDao()
+        return when (group) {
+            "daily" -> {
+                val startedAt = Calendar.getInstance().apply {
+                    set(Calendar.HOUR, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val endedAt = Calendar.getInstance().apply {
+                    timeInMillis = startedAt.timeInMillis
+                    add(Calendar.DATE, 1)// 하루 추가
+                }
+                dao.getToday(command, startedAt.timeInMillis, endedAt.timeInMillis)
+            }
+            "weekly" -> dao.getWeekly(command)
+            "monthly" -> dao.getMonthly(command)
+            "yearly" -> dao.getYearly(command)
+            else -> dao.getAll(command)
+        }
+    }
 
     @SuppressLint("WrongConstant")
     fun sendNotificationUnder(status: String, message: String) {
@@ -431,13 +508,36 @@ class PlantInfoMainActivity : AppCompatActivity(), NavigationView.OnNavigationIt
 
         var addTask = object : TimerTask() {
             override fun run() {
+                // 데이터 리스너
+                BleManager.instance.onReceiveData = { command, date, data ->
+
+                    // Insert Receive Data
+                    MainApplication.database.bleReceiveDao().insert(
+                        BleReceive(
+                            command.value,
+                            Calendar.getInstance().apply {
+                                set(Calendar.HOUR_OF_DAY, date.substring(0, 2).toInt())
+                                set(Calendar.MINUTE, date.substring(2, 4).toInt())
+                            }.timeInMillis,
+                            data
+                        )
+                    )
+                    // Log.d("DustMainActivity", "Command : ${command}, Date : ${date}, Data : ${data}")
+                }
                 //주기적으로 실행할 작업 추가
+                BleManager.instance.writeQueue(BleManager.Command.Battery, Date())
+                BleManager.instance.writeQueue(BleManager.Command.Humidity, Date())
                 BleManager.instance.writeQueue(BleManager.Command.PM1, Date())
+                BleManager.instance.writeQueue(BleManager.Command.PM10, Date())
+                BleManager.instance.writeQueue(BleManager.Command.PM2_5, Date())
+                BleManager.instance.writeQueue(BleManager.Command.Illuminance, Date())
+                BleManager.instance.writeQueue(BleManager.Command.Temperature, Date())
             }
         }
 
         timer.schedule(addTask, 0, 10 * 1000) //// 0초후 첫실행, Interval분마다 계속실행
     }
+
 
     fun stopPeriod() {
         //Timer 작업 종료
